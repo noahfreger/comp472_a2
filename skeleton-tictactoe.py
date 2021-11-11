@@ -13,9 +13,11 @@ class Game:
 		self.recommend = recommend
 		
 	def initialize_game(self):
-		self.current_state = [['.','.','.'],
-							  ['.','.','.'],
-							  ['.','.','.']]
+		self.current_state = [['O','X','O','.','.'],
+							  ['O','X','.','.','.'],
+							  ['X','O','X','.','.'],
+							  ['X','O','X','X','.'],
+							  ['X','O','X','X','X']]
 		# Player X always plays first
 		self.player_turn = 'X'
 
@@ -185,10 +187,55 @@ class Game:
 							beta = value
 		return (value, x, y)
 
-
-	def e1(self, board, board_size, player, other_player):
+	def e1(self, board, board_size, player, other_player, lineup_size):
 		"""
 		Simple heuristic function that sums up the difference in the number of pieces 
+		between the other player and the current player for each row, column and the 2 main diagonals
+		"""
+		
+		score = 0
+
+		board_range = range(board_size)
+
+		# Computing row scores
+		for i in board_range:
+			player_score = sum(board[i][j] == player for j in board_range)
+			opponent_score = sum(board[i][j] == other_player for j in board_range)
+			if player_score == lineup_size:
+				return -lineup_size * board_size * board_size
+			else:
+				score += opponent_score - player_score
+
+		# Computing column scores
+		for j in board_range:
+			player_score = sum(board[i][j] == player for i in board_range)
+			opponent_score = sum(board[i][j] == other_player for i in board_range)
+			if player_score == lineup_size:
+				return -lineup_size * board_size * board_size
+			else:
+				score += opponent_score - player_score
+
+		# Computing first diagonal score
+		player_score = sum(board[i][i] == player for i in board_range)
+		opponent_score = sum(board[i][i] == other_player for i in board_range)
+		if player_score == lineup_size:
+			return -lineup_size * board_size * board_size
+		else:
+			score += opponent_score - player_score
+
+		# Computing second diagonal score
+		player_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
+		opponent_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
+		if player_score == lineup_size:
+			return -lineup_size * board_size * board_size
+		else:
+			score += opponent_score - player_score
+
+		return score
+
+	def e2(self, board, board_size, player, other_player):
+		"""
+		More complex heuristic function that sums up the difference in the number of adjacent pieces 
 		between the other player and the current player for each row, column and diagonal
 		"""
 		
@@ -196,28 +243,7 @@ class Game:
 
 		board_range = range(board_size)
 
-		# Computing row score
-		for i in board_range:
-			player_score = sum(board[i][j] == player for j in board_range)
-			opponent_score = sum(board[i][j] == other_player for j in board_range)
-			score += opponent_score - player_score
-
-		# Computing column score
-		for j in board_range:
-			player_score = sum(board[i][j] == player for i in board_range)
-			opponent_score = sum(board[i][j] == other_player for i in board_range)
-			score += opponent_score - player_score
-
-		# Computing first diagonal score
-		player_score = sum(board[i][i] == player for i in board_range)
-		opponent_score = sum(board[i][i] == other_player for i in board_range)
-		score += opponent_score - player_score
-
-		# Computing second diagonal score
-		player_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
-		opponent_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
-		score += opponent_score - player_score
-
+	
 		return score
 
 	def play(self,algo=None,player_x=None,player_o=None):
@@ -256,8 +282,9 @@ class Game:
 
 def main():
 	g = Game(recommend=True)
-	g.play(algo=Game.ALPHABETA,player_x=Game.AI,player_o=Game.AI)
-	g.play(algo=Game.MINIMAX,player_x=Game.AI,player_o=Game.HUMAN)
+	# g.play(algo=Game.ALPHABETA,player_x=Game.AI,player_o=Game.AI)
+	# g.play(algo=Game.MINIMAX,player_x=Game.AI,player_o=Game.HUMAN)
+	print(g.e1(g.current_state,5,'X','O',4))
 
 if __name__ == "__main__":
 	main()
