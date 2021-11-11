@@ -14,10 +14,10 @@ class Game:
 		
 	def initialize_game(self):
 		self.current_state = [['X','.','.','O','X'],
-							  ['.','X','.','.','.'],
-							  ['.','O','X','.','.'],
-							  ['.','O','O','.','.'],
-							  ['X','.','O','.','X']]
+							  ['O','X','.','X','.'],
+							  ['O','O','.','.','.'],
+							  ['.','O','.','O','.'],
+							  ['X','X','.','.','X']]
 		# Player X always plays first
 		self.player_turn = 'X'
 
@@ -216,7 +216,7 @@ class Game:
 
 		# Computing second diagonal score
 		player_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
-		opponent_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
+		opponent_score = sum(board[i][board_size - 1 - i] == other_player for i in board_range)
 		score += opponent_score - player_score
 
 		return score
@@ -272,7 +272,7 @@ def main():
 	g = Game(recommend=True)
 	# g.play(algo=Game.ALPHABETA,player_x=Game.AI,player_o=Game.AI)
 	# g.play(algo=Game.MINIMAX,player_x=Game.AI,player_o=Game.HUMAN)
-	print(g.e1(g.current_state,5,'X','O',4))
+	print(g.e1(g.current_state,5,'X','O'))
 
 if __name__ == "__main__":
 	main()
