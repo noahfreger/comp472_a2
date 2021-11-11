@@ -13,11 +13,11 @@ class Game:
 		self.recommend = recommend
 		
 	def initialize_game(self):
-		self.current_state = [['O','X','O','.','.'],
-							  ['O','X','.','.','.'],
-							  ['X','O','X','.','.'],
-							  ['X','O','X','X','.'],
-							  ['X','O','X','X','X']]
+		self.current_state = [['X','.','.','O','X'],
+							  ['.','X','.','.','.'],
+							  ['.','O','X','.','.'],
+							  ['.','O','O','.','.'],
+							  ['X','.','O','.','X']]
 		# Player X always plays first
 		self.player_turn = 'X'
 
@@ -201,35 +201,23 @@ class Game:
 		for i in board_range:
 			player_score = sum(board[i][j] == player for j in board_range)
 			opponent_score = sum(board[i][j] == other_player for j in board_range)
-			if player_score == lineup_size:
-				return -lineup_size * board_size * board_size
-			else:
-				score += opponent_score - player_score
+			score += opponent_score - player_score
 
 		# Computing column scores
 		for j in board_range:
 			player_score = sum(board[i][j] == player for i in board_range)
 			opponent_score = sum(board[i][j] == other_player for i in board_range)
-			if player_score == lineup_size:
-				return -lineup_size * board_size * board_size
-			else:
-				score += opponent_score - player_score
+			score += opponent_score - player_score
 
 		# Computing first diagonal score
 		player_score = sum(board[i][i] == player for i in board_range)
 		opponent_score = sum(board[i][i] == other_player for i in board_range)
-		if player_score == lineup_size:
-			return -lineup_size * board_size * board_size
-		else:
-			score += opponent_score - player_score
+		score += opponent_score - player_score
 
 		# Computing second diagonal score
 		player_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
 		opponent_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
-		if player_score == lineup_size:
-			return -lineup_size * board_size * board_size
-		else:
-			score += opponent_score - player_score
+		score += opponent_score - player_score
 
 		return score
 
