@@ -186,7 +186,7 @@ class Game:
 		return (value, x, y)
 
 
-	def e1(self, board, board_size, player, other_player, line_up_size):
+	def e1(self, board, board_size, player, other_player):
 		"""
 		Simple heuristic function that sums up the difference in the number of pieces 
 		between the other player and the current player for each row, column and diagonal
@@ -196,20 +196,24 @@ class Game:
 
 		board_range = range(board_size)
 
+		# Computing row score
 		for i in board_range:
 			player_score = sum(board[i][j] == player for j in board_range)
 			opponent_score = sum(board[i][j] == other_player for j in board_range)
 			score += opponent_score - player_score
 
+		# Computing column score
 		for j in board_range:
 			player_score = sum(board[i][j] == player for i in board_range)
 			opponent_score = sum(board[i][j] == other_player for i in board_range)
 			score += opponent_score - player_score
 
+		# Computing first diagonal score
 		player_score = sum(board[i][i] == player for i in board_range)
 		opponent_score = sum(board[i][i] == other_player for i in board_range)
 		score += opponent_score - player_score
 
+		# Computing second diagonal score
 		player_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
 		opponent_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
 		score += opponent_score - player_score
