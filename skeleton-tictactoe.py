@@ -187,7 +187,7 @@ class Game:
 							beta = value
 		return (value, x, y)
 
-	def e1(self, board, board_size, player, other_player, lineup_size):
+	def e1(self, board, board_size, player, other_player):
 		"""
 		Simple heuristic function that sums up the difference in the number of pieces 
 		between the other player and the current player for each row, column and the 2 main diagonals
