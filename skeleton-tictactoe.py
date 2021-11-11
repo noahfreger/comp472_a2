@@ -185,6 +185,37 @@ class Game:
 							beta = value
 		return (value, x, y)
 
+
+	def e1(self, board, board_size, player, other_player, line_up_size):
+		"""
+		Simple heuristic function that sums up the difference in the number of pieces 
+		between the other player and the current player for each row, column and diagonal
+		"""
+		
+		score = 0
+
+		board_range = range(board_size)
+
+		for i in board_range:
+			player_score = sum(board[i][j] == player for j in board_range)
+			opponent_score = sum(board[i][j] == other_player for j in board_range)
+			score += opponent_score - player_score
+
+		for j in board_range:
+			player_score = sum(board[i][j] == player for i in board_range)
+			opponent_score = sum(board[i][j] == other_player for i in board_range)
+			score += opponent_score - player_score
+
+		player_score = sum(board[i][i] == player for i in board_range)
+		opponent_score = sum(board[i][i] == other_player for i in board_range)
+		score += opponent_score - player_score
+
+		player_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
+		opponent_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
+		score += opponent_score - player_score
+
+		return score
+
 	def play(self,algo=None,player_x=None,player_o=None):
 		if algo == None:
 			algo = self.ALPHABETA
