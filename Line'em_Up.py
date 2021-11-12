@@ -12,8 +12,8 @@ class Game:
         self.initialize_game()
 
         self.recommend = recommend
-        self.n = 4
-        self.rows = 4
+        self.n = 3
+        self.s = 3
 
     def initialize_game(self):
         self.current_state = [['.', '.', '.'],
@@ -30,11 +30,20 @@ class Game:
 
     def draw_board(self):
         print()
-        for y in range(0, 3):
-            for x in range(0, 3):
+        for y in range(0, self.n):
+            for x in range(0, self.n):
                 print(F'{self.current_state[x][y]}', end="")
             print()
         print()
+
+    def test1(self):
+        self.current_state = [['.', '.', '.','.','.'],
+                              ['.', '.', '.','.','.'],
+                              ['.', '.', '.','.','.'],
+                              ['.', '.', '.','.','.'],
+                              ['.', '.', '.','.','.']]
+        self.draw_board()                      
+        self.check_end()
 
     def is_valid(self, px, py):
         if px < 0 or px > 2 or py < 0 or py > 2:
@@ -46,83 +55,90 @@ class Game:
 
     def is_end(self):
         # Vertical win
-        for i in range(0, 3):
-            if (self.current_state[0][i] != '.' and
-                    self.current_state[0][i] == self.current_state[1][i] and
-                    self.current_state[1][i] == self.current_state[2][i]):
-                return self.current_state[0][i]
-        # Horizontal win
-        for i in range(0, 3):
-            if (self.current_state[i] == ['X', 'X', 'X']):
-                return 'X'
-            elif (self.current_state[i] == ['O', 'O', 'O']):
-                return 'O'
-        # Main diagonal win
-        if (self.current_state[0][0] != '.' and
-                self.current_state[0][0] == self.current_state[1][1] and
-                self.current_state[0][0] == self.current_state[2][2]):
-            return self.current_state[0][0]
-        # Second diagonal win
-        if (self.current_state[0][2] != '.' and
-                self.current_state[0][2] == self.current_state[1][1] and
-                self.current_state[0][2] == self.current_state[2][0]):
-            return self.current_state[0][2]
-        # Is whole board full?
-        for i in range(0, 3):
-            for j in range(0, 3):
-                # There's an empty field, we continue the game
-                if (self.current_state[i][j] == '.'):
-                    return None
-        # It's a tie!
-        return '.'
-
-    def is_end2(self):
-        # Vertical win
-        count = 0 
         for i in range(0, self.n):
+            count = 1
             for j in range(0, self.n - 1):
-                if(self.current_state[j][i] == '.' or self.current_state[j][i] == '*'):
-                    count = 0
-                if(self.current_state[j][i] == self.current_state[j+1][i]):
+                item = self.current_state[i][j]
+                nextItem = self.current_state[i][j+1]
+                if(item == '.' or item == '*' or item != nextItem):
+                    count = 1
+                else:
                     count += 1
-                if(count == self.rows):
-                    return self.current_state[0][i]
-
+                if(count == self.s ):
+                    return self.current_state[i][j - count + 2]
         # Horizontal win
-        count = 0
         for j in range(0, self.n):
+            count = 1
             for i in range(0, self.n - 1):
-                if(self.current_state[j][i] == '.' or self.current_state[j][i] == '*'):
-                    count = 0
-                if (self.current_state[j][i] == self.current_state[j+1][i]):
+                item = self.current_state[i][j]
+                nextItem = self.current_state[i+1][j]
+                if(item == '.' or item == '*' or item != nextItem):
+                    count = 1
+                else:
                     count += 1
-                if(count == self.rows):
-                    return self.current_state[0][i]  
+                if(count == self.s ):
+                    return self.current_state[i - count + 2][j]
 
-        # Main diagonal win
-        count = 0
-        for i in range(0, self.n):
-            for j in range(0, self.n - 1):
-                if(self.current_state[j][i] == '.' or self.current_state[j][i] == '*'):
-                    count = 0
-                if(self.current_state[j][i] == self.current_state[j+1][i]):
+        # Main diagonal win (from left to right)
+        # we start at n-3 and end at -n+2 because minimum possible win condition is 3 in a row
+        for i in range(self.n - 3, - self.n + 2, -1):
+            count = 1
+            # Different end condition for left of main diagnol
+            end = self.n - i - 1 if i > 0 else self.n - 2 - (abs(i) - 1)
+            for j in range(0, end):
+                if(i>=0):
+                    item = self.current_state[i + j][j]
+                    nextItem = self.current_state[i + j + 1][j + 1]
+                    nextX = i + j + 1
+                    nextY = j + 1
+                else:
+                    item = self.current_state[j][abs(i) + j]
+                    nextItem = self.current_state[j + 1][abs(i) + j + 1]
+                    nextX = j + 1
+                    nextY = abs(i) + j + 1
+
+                if(item == '.' or item == '*' or item != nextItem):
+                    count = 1
+                    continue
+                else:
                     count += 1
-                if(count == self.rows):
-                    return self.current_state[0][i]
-        # Second diagonal win
-        if (self.current_state[0][2] != '.' and
-                self.current_state[0][2] == self.current_state[1][1] and
-                self.current_state[0][2] == self.current_state[2][0]):
-            return self.current_state[0][2]
+                if(count == self.s):
+                    return self.current_state[nextX - (count - 1)][nextY - (count - 1)]
+                    
+        # Second diagonal win (from right to left)
+        for i in range(self.n - 3, self.n + 2):
+            count = 1
+            # Different end condition for left of main diagnol
+            end = i if i <= self.n - 1 else self.n - 2 - (i - self.n)
+            for j in range(0, end):
+                if(i <= self.n - 1):
+                    item = self.current_state[i - j][j]
+                    nextItem = self.current_state[i - j - 1][j + 1]
+                    nextX = i - j - 1
+                else:
+                    item = self.current_state[ self.n - j - 1][j + i - self.n + 1]
+                    nextItem = self.current_state[self.n - j -  2][j + i - self.n + 2]
+                    nextX = self.n - j -  2
+                    nextY = j + i - self.n + 2
+
+                if(item == '.' or item == '*' or item != nextItem):
+                    count = 1
+                    continue
+                else:
+                    count += 1
+                #Checks the win condition and returns the first instanc
+                if(count == self.s):
+                    return self.current_state[nextX][nextY]
+
         # Is whole board full?
-        for i in range(0, 3):
-            for j in range(0, 3):
+        for i in range(0, self.n):
+            for j in range(0, self.n):
                 # There's an empty field, we continue the game
                 if (self.current_state[i][j] == '.'):
                     return None
         # It's a tie!
         return '.'
-
+    
     def check_end(self):
         self.result = self.is_end()
         # Printing the appropriate message if the game has ended
@@ -168,24 +184,24 @@ class Game:
         y = None
         result = self.is_end()
         if result == 'X':
-            return (-1, x, y)
+            return (-1, x, y,count)
         elif result == 'O':
-            return (1, x, y)
+            return (1, x, y,count)
         elif result == '.':
-            return (0, x, y)
+            return (0, x, y,count)
         for i in range(0, 3):
             for j in range(0, 3):
                 if self.current_state[i][j] == '.':
                     if max:
                         self.current_state[i][j] = 'O'
-                        (v, _, _) = self.minimax(max=False)
+                        (v, _, _, _) = self.minimax(max=False)
                         if v > value:
                             value = v
                             x = i
                             y = j
                     else:
                         self.current_state[i][j] = 'X'
-                        (v, _, _) = self.minimax(max=True)
+                        (v, _, _, _) = self.minimax(max=True)
                         if v < value:
                             value = v
                             x = i
@@ -259,9 +275,9 @@ class Game:
             start = time.time()
             if algo == self.MINIMAX:
                 if self.player_turn == 'X':
-                    (_, x, y) = self.minimax(max=False)
+                    (_, x, y, _) = self.minimax(max=False)
                 else:
-                    (_, x, y) = self.minimax(max=True)
+                    (_, x, y, _) = self.minimax(max=True)
             else:  # algo == self.ALPHABETA
                 if self.player_turn == 'X':
                     (m, x, y) = self.alphabeta(max=False)
@@ -281,8 +297,9 @@ class Game:
 
 def main():
     g = Game(recommend=True)
+    #g.test1()
     g.play(algo=Game.ALPHABETA, player_x=Game.AI, player_o=Game.AI)
-    # g.play(algo=Game.MINIMAX, player_x=Game.AI, player_o=Game.HUMAN)
+    #g.play(algo=Game.ALPHABETA, player_x=Game.AI, player_o=Game.HUMAN)
 
 
 if __name__ == "__main__":
