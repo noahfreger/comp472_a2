@@ -63,7 +63,7 @@ class Game:
 			y = self.b_array[i][1]
 			self.current_state[x][y] = '*'
 
-		# Player X always plays first
+		#  Player X always plays first
 
 		self.draw_board()
 		self.player_turn = 'X'
