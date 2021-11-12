@@ -12,7 +12,7 @@ class Game:
         self.initialize_game()
 
         self.recommend = recommend
-        self.n = 3
+        self.n = 5
         self.s = 3
 
     def initialize_game(self):
@@ -37,11 +37,13 @@ class Game:
         print()
 
     def test1(self):
-        self.current_state = [['.', '.', '.','.','.'],
-                              ['.', '.', '.','.','.'],
+        self.current_state = [['X', '.', '.','.','.'],
+                              ['.', 'X', '.','.','.'],
                               ['.', '.', '.','.','.'],
                               ['.', '.', '.','.','.'],
                               ['.', '.', '.','.','.']]
+
+        self.s = 3
         self.draw_board()                      
         self.check_end()
 
@@ -103,7 +105,7 @@ class Game:
                 else:
                     count += 1
                 if(count == self.s):
-                    return self.current_state[nextX - (count - 1)][nextY - (count - 1)]
+                    return self.current_state[nextX][nextY]
                     
         # Second diagonal win (from right to left)
         for i in range(self.n - 3, self.n + 2):
@@ -115,6 +117,7 @@ class Game:
                     item = self.current_state[i - j][j]
                     nextItem = self.current_state[i - j - 1][j + 1]
                     nextX = i - j - 1
+                    nextY = j + 1
                 else:
                     item = self.current_state[ self.n - j - 1][j + i - self.n + 1]
                     nextItem = self.current_state[self.n - j -  2][j + i - self.n + 2]
@@ -126,7 +129,7 @@ class Game:
                     continue
                 else:
                     count += 1
-                #Checks the win condition and returns the first instanc
+                # Checks the win condition and returns the first instanc
                 if(count == self.s):
                     return self.current_state[nextX][nextY]
 
@@ -297,8 +300,8 @@ class Game:
 
 def main():
     g = Game(recommend=True)
-    #g.test1()
-    g.play(algo=Game.ALPHABETA, player_x=Game.AI, player_o=Game.AI)
+    g.test1()
+    # g.play(algo=Game.ALPHABETA, player_x=Game.AI, player_o=Game.AI)
     #g.play(algo=Game.ALPHABETA, player_x=Game.AI, player_o=Game.HUMAN)
 
 
