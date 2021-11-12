@@ -12,20 +12,35 @@ class Game:
         self.initialize_game()
 
         self.recommend = recommend
-        self.n = 5
+        self.n = 3
         self.s = 3
+        self.countDepth = 0
 
     def initialize_game(self):
-        self.current_state = [['.', '.', '.'],
+        self.current_state = [
+                              ['.', '.', '.'],
                               ['.', '.', '.'],
                               ['.', '.', '.']]
         # Player X always plays first
 		# print() TODO: print initial game params
-
+        print(F'n={self.n} b={self.b} s={self.s} t={self.t}')
+        
         self.player_turn = 'X'
 
-    def draw_turn_info(self, x, y, time, eval_depth, avg_eval_depth, avg_recursion_depth):
-        print(F'Evaluation time: {round(time, 7)}s')
+    def reset_values(self):
+        self.time = 0
+        self.eval_depth = 0
+        self.depthList = []
+        self.avg_eval_depth = 0
+        avg_recursion_depth = 0
+
+    def draw_end_game_stats(self):
+        print()
+
+    def draw_turn_stats(self, x, y):
+        print(F'Evaluation time: {self.time}s')
+        print(F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
+        print(F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
         print(F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
 
     def draw_board(self):
@@ -37,13 +52,13 @@ class Game:
         print()
 
     def test1(self):
-        self.current_state = [['X', '.', '.','.','.'],
-                              ['.', 'X', '.','.','.'],
+        self.current_state = [['.', '.', '.','.','.'],
+                              ['.', '.', '.','.','.'],
                               ['.', '.', '.','.','.'],
                               ['.', '.', '.','.','.'],
                               ['.', '.', '.','.','.']]
-
-        self.s = 3
+        self.n = 5
+        self.s = 5
         self.draw_board()                      
         self.check_end()
 
@@ -66,8 +81,8 @@ class Game:
                     count = 1
                 else:
                     count += 1
-                if(count == self.s ):
-                    return self.current_state[i][j - count + 2]
+                    if(count == self.s ):
+                        return nextItem
         # Horizontal win
         for j in range(0, self.n):
             count = 1
@@ -78,10 +93,10 @@ class Game:
                     count = 1
                 else:
                     count += 1
-                if(count == self.s ):
-                    return self.current_state[i - count + 2][j]
+                    if(count == self.s ):
+                        return nextItem
 
-        # Main diagonal win (from left to right)
+        # First diagonal win (from left to right)
         # we start at n-3 and end at -n+2 because minimum possible win condition is 3 in a row
         for i in range(self.n - 3, - self.n + 2, -1):
             count = 1
@@ -91,21 +106,15 @@ class Game:
                 if(i>=0):
                     item = self.current_state[i + j][j]
                     nextItem = self.current_state[i + j + 1][j + 1]
-                    nextX = i + j + 1
-                    nextY = j + 1
                 else:
                     item = self.current_state[j][abs(i) + j]
                     nextItem = self.current_state[j + 1][abs(i) + j + 1]
-                    nextX = j + 1
-                    nextY = abs(i) + j + 1
-
                 if(item == '.' or item == '*' or item != nextItem):
                     count = 1
-                    continue
                 else:
                     count += 1
-                if(count == self.s):
-                    return self.current_state[nextX][nextY]
+                    if(count == self.s):
+                        return nextItem
                     
         # Second diagonal win (from right to left)
         for i in range(self.n - 3, self.n + 2):
@@ -116,22 +125,16 @@ class Game:
                 if(i <= self.n - 1):
                     item = self.current_state[i - j][j]
                     nextItem = self.current_state[i - j - 1][j + 1]
-                    nextX = i - j - 1
-                    nextY = j + 1
                 else:
                     item = self.current_state[ self.n - j - 1][j + i - self.n + 1]
                     nextItem = self.current_state[self.n - j -  2][j + i - self.n + 2]
-                    nextX = self.n - j -  2
-                    nextY = j + i - self.n + 2
-
                 if(item == '.' or item == '*' or item != nextItem):
                     count = 1
-                    continue
                 else:
                     count += 1
-                # Checks the win condition and returns the first instanc
-                if(count == self.s):
-                    return self.current_state[nextX][nextY]
+                    # Checks the win condition
+                    if(count == self.s):
+                        return nextItem
 
         # Is whole board full?
         for i in range(0, self.n):
@@ -179,48 +182,6 @@ class Game:
         # 0  - a tie
         # 1  - loss for 'X'
         # We're initially setting it to 2 or -2 as worse than the worst case:
-        count = 0
-        value = 2
-        if max:
-            value = -2
-        x = None
-        y = None
-        result = self.is_end()
-        if result == 'X':
-            return (-1, x, y,count)
-        elif result == 'O':
-            return (1, x, y,count)
-        elif result == '.':
-            return (0, x, y,count)
-        for i in range(0, 3):
-            for j in range(0, 3):
-                if self.current_state[i][j] == '.':
-                    if max:
-                        self.current_state[i][j] = 'O'
-                        (v, _, _, _) = self.minimax(max=False)
-                        if v > value:
-                            value = v
-                            x = i
-                            y = j
-                    else:
-                        self.current_state[i][j] = 'X'
-                        (v, _, _, _) = self.minimax(max=True)
-                        if v < value:
-                            value = v
-                            x = i
-                            y = j
-                    self.current_state[i][j] = '.'
-                    count + 1
-        return (value, x, y, count)
-
-    def alphabeta(self, alpha=-2, beta=2, max=False):
-        # Minimizing for 'X' and maximizing for 'O'
-        # Possible values are:
-        # -1 - win for 'X'
-        # 0  - a tie
-        # 1  - loss for 'X'
-        # We're initially setting it to 2 or -2 as worse than the worst case:
-        count = 0
         value = 2
         if max:
             value = -2
@@ -233,8 +194,52 @@ class Game:
             return (1, x, y)
         elif result == '.':
             return (0, x, y)
-        for i in range(0, 3):
-            for j in range(0, 3):
+        for i in range(0, self.n):
+            for j in range(0, self.n):
+                if self.current_state[i][j] == '.':
+                    if max:
+                        self.current_state[i][j] = 'O'
+                        (v, _, _,) = self.minimax(max=False)
+                        if v > value:
+                            value = v
+                            x = i
+                            y = j
+                    else:
+                        self.current_state[i][j] = 'X'
+                        (v, _, _) = self.minimax(max=True)
+                        if v < value:
+                            value = v
+                            x = i
+                            y = j
+                    self.current_state[i][j] = '.'
+                    self.countDepth += 1
+        return (value, x, y)
+
+    def alphabeta(self, alpha=-2, beta=2, max=False):
+        # Minimizing for 'X' and maximizing for 'O'
+        # Possible values are:
+        # -1 - win for 'X'
+        # 0  - a tie
+        # 1  - loss for 'X'
+        # We're initially setting it to 2 or -2 as worse than the worst case:
+        self.countDepth = 0
+        value = 2
+        if max:
+            value = -2
+        x = None
+        y = None
+        result = self.is_end()
+        if result == 'X':
+            self.countDepth += 1 
+            return (-1, x, y)
+        elif result == 'O':
+            self.countDepth += 1 
+            return (1, x, y)
+        elif result == '.':
+            self.countDepth += 1 
+            return (0, x, y)
+        for i in range(0, self.n ):
+            for j in range(0, self.n):
                 if self.current_state[i][j] == '.':
                     if max:
                         self.current_state[i][j] = 'O'
@@ -253,15 +258,17 @@ class Game:
                     self.current_state[i][j] = '.'
                     if max:
                         if value >= beta:
+                            self.countDepth += 1 
                             return (value, x, y)
                         if value > alpha:
                             alpha = value
                     else:
                         if value <= alpha:
+                            self.countDepth += 1 
                             return (value, x, y)
                         if value < beta:
                             beta = value
-                    count + 1        
+        self.countDepth += 1        
         return (value, x, y)
 
     def play(self, algo=None, player_x=None, player_o=None):
@@ -278,30 +285,32 @@ class Game:
             start = time.time()
             if algo == self.MINIMAX:
                 if self.player_turn == 'X':
-                    (_, x, y, _) = self.minimax(max=False)
+                    (_, x, y) = self.minimax(max=False)
                 else:
-                    (_, x, y, _) = self.minimax(max=True)
+                    (_, x, y) = self.minimax(max=True)
             else:  # algo == self.ALPHABETA
                 if self.player_turn == 'X':
                     (m, x, y) = self.alphabeta(max=False)
                 else:
                     (m, x, y) = self.alphabeta(max=True)
             end = time.time()
+            self.time = round(end - start, 7)
             if (self.player_turn == 'X' and player_x == self.HUMAN) or (self.player_turn == 'O' and player_o == self.HUMAN):
                 if self.recommend:
                     print(F'Evaluation time: {round(end - start, 7)}s')
                     print(F'Recommended move: x = {x}, y = {y}')
                 (x, y) = self.input_move()
+                self.draw_turn_stats(x, y)
             if (self.player_turn == 'X' and player_x == self.AI) or (self.player_turn == 'O' and player_o == self.AI):
-               self.draw_turn_info(self, x, y, end - start, 1, 1)
+                self.draw_turn_stats(x, y)
             self.current_state[x][y] = self.player_turn
             self.switch_player()
 
 
 def main():
     g = Game(recommend=True)
-    g.test1()
-    # g.play(algo=Game.ALPHABETA, player_x=Game.AI, player_o=Game.AI)
+    #g.test1()
+    g.play(algo=Game.MINIMAX, player_x=Game.AI, player_o=Game.AI)
     #g.play(algo=Game.ALPHABETA, player_x=Game.AI, player_o=Game.HUMAN)
 
 
