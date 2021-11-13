@@ -1,7 +1,6 @@
 # based on code from https://stackabuse.com/minimax-and-alpha-beta-pruning-in-python
 
 import numpy as np
-import numpy.ma as ma
 import time
 
 class Game:
