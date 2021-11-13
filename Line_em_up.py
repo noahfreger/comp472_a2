@@ -431,10 +431,6 @@ class Game:
         if player_o == None:
             player_o = self.HUMAN
         while True:
-            self.move += 1
-            self.stats["heuristic_turn_count"] = 0
-            if self.check_end():
-                return
             start = time.time()
             if algo == self.MINIMAX:
                 if self.player_turn == 'X':
@@ -458,6 +454,10 @@ class Game:
             self.draw_turn_stats(x, y)
             self.current_state[x][y] = self.player_turn
             self.draw_board()
+            self.move += 1
+            self.stats["heuristic_turn_count"] = 0
+            if self.check_end():
+                return
             self.switch_player()
 
 
