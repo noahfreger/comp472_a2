@@ -2,6 +2,7 @@
 
 import time
 
+
 class Game:
     MINIMAX = 0
     ALPHABETA = 1
@@ -13,10 +14,11 @@ class Game:
         self.recommend = recommend
 
     def initialize_game(self):
+        # Get inputs from human
         print('Select the size of the board:')
         self.n = int(input('Enter a value from 3-10: '))
         print('Select the winning line-up size: ')
-        self.s = int(input('Enter a value from 3-' + str(self.n) +': '))
+        self.s = int(input('Enter a value from 3-' + str(self.n) + ': '))
         print(F'Select the max depth of the adversarial search for player 1: ')
         self.d1 = int(input('Enter a value : '))
         print(F'Select the max depth of the adversarial search for player 2: ')
@@ -24,13 +26,15 @@ class Game:
         print(F'Select the max allowed time for the program to return a move: ')
         self.t = int(input('Enter an amount of seconds : '))
         print(F'Select whether minimax or alphabeta will be used: ')
-        self.a = bool(input('Enter False for minimax and True for alphabeta : '))
+        self.a = bool(
+            input('Enter False for minimax and True for alphabeta : '))
         if self.a == True:
             self.algo = Game.ALPHABETA
         elif self.a == False:
             self.algo = Game.MINIMAX
         print(F'Select the play mode: ')
-        mode_select = str(input('Enter h-h if both player 1 and 2 are human, h-ai if player 1 is human and player 2 is AI, ai-h if player 1 is AI and player 2 is human and ai-ai if both players are ai : '))
+        mode_select = str(input(
+            'Enter h-h if both player 1 and 2 are human, h-ai if player 1 is human and player 2 is AI, ai-h if player 1 is AI and player 2 is human and ai-ai if both players are ai : '))
         if mode_select == "h-h":
             self.player_1 = Game.HUMAN
             self.player_2 = Game.HUMAN
@@ -44,28 +48,38 @@ class Game:
             self.player_1 = Game.AI
             self.player_2 = Game.AI
         print(F'Select the number of blocks on the board:')
+        # Get Coordinate and Number of blocks for board
         self.b = int(input('Enter a value : '))
         self.b_array = []
         for i in range(self.b):
-            x = ord(str(input('enter the x coordinate for block ' + str(i) + ' : ' ))) - 97
-            y = (int(input('enter the y coordinate for block ' + str(i) + ' : ' )))
-            self.b_array.append(tuple([x,y]))
+            x = ord(
+                str(input('enter the x coordinate for block ' + str(i) + ' : '))) - 65
+            y = (int(input('enter the y coordinate for block ' + str(i) + ' : ')))
+            self.b_array.append(tuple([x, y]))
         self.current_state = []
+        # Build game board with blocks
         for i in range(self.n):
             row = []
             for j in range(self.n):
                 row.append('.')
             self.current_state.append(row)
-
+        self.draw_board()
         for i in range(self.b):
             x = self.b_array[i][0]
             y = self.b_array[i][1]
             self.current_state[x][y] = '*'
 
-        self.draw_board()
-        self.player_turn = 'X'
+        # Display Initial Game info
         print(F'n={self.n} b={self.b} s={self.s} t={self.t}')
+        print(F'blocs={self.b_array}')
+        print()
+        print(F'Player 1: {self.player_1} d={self.d1} a={self.a} e1(regular)')
+        print(
+            F'Player 2: {self.player_2} d={self.d2} a={self.a} e1(defensive)')
 
+        # Display Board
+        self.draw_board()
+        # X always starts
         self.player_turn = 'X'
 
     def reset_values(self):
@@ -80,9 +94,12 @@ class Game:
 
     def draw_turn_stats(self, x, y):
         print(F'Evaluation time: {self.time}s')
-        print(F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
-        print(F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
-        print(F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
+        print(
+            F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
+        print(
+            F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
+        print(
+            F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
 
     def draw_board(self):
         print()
@@ -108,7 +125,7 @@ class Game:
             return False
         else:
             return True
-            
+
     def is_end(self):
         # Vertical win
         for i in range(0, self.n):
@@ -120,7 +137,7 @@ class Game:
                     count = 1
                 else:
                     count += 1
-                    if(count == self.s ):
+                    if(count == self.s):
                         return nextItem
         # Horizontal win
         for j in range(0, self.n):
@@ -132,7 +149,7 @@ class Game:
                     count = 1
                 else:
                     count += 1
-                    if(count == self.s ):
+                    if(count == self.s):
                         return nextItem
 
         # First diagonal win (from left to right)
@@ -142,7 +159,7 @@ class Game:
             # Different end condition for left of main diagnol
             end = self.n - i - 1 if i > 0 else self.n - 2 - (abs(i) - 1)
             for j in range(0, end):
-                if(i>=0):
+                if(i >= 0):
                     item = self.current_state[i + j][j]
                     nextItem = self.current_state[i + j + 1][j + 1]
                 else:
@@ -154,7 +171,7 @@ class Game:
                     count += 1
                     if(count == self.s):
                         return nextItem
-                    
+
         # Second diagonal win (from right to left)
         for i in range(self.n - 3, self.n + 2):
             count = 1
@@ -165,8 +182,10 @@ class Game:
                     item = self.current_state[i - j][j]
                     nextItem = self.current_state[i - j - 1][j + 1]
                 else:
-                    item = self.current_state[ self.n - j - 1][j + i - self.n + 1]
-                    nextItem = self.current_state[self.n - j -  2][j + i - self.n + 2]
+                    item = self.current_state[self.n -
+                                              j - 1][j + i - self.n + 1]
+                    nextItem = self.current_state[self.n -
+                                                  j - 2][j + i - self.n + 2]
                 if(item == '.' or item == '*' or item != nextItem):
                     count = 1
                 else:
@@ -183,7 +202,7 @@ class Game:
                     return None
         # It's a tie!
         return '.'
-    
+
     def check_end(self):
         self.result = self.is_end()
         # Printing the appropriate message if the game has ended
@@ -269,15 +288,15 @@ class Game:
         y = None
         result = self.is_end()
         if result == 'X':
-            self.countDepth += 1 
+            self.countDepth += 1
             return (-1, x, y)
         elif result == 'O':
-            self.countDepth += 1 
+            self.countDepth += 1
             return (1, x, y)
         elif result == '.':
-            self.countDepth += 1 
+            self.countDepth += 1
             return (0, x, y)
-        for i in range(0, self.n ):
+        for i in range(0, self.n):
             for j in range(0, self.n):
                 if self.current_state[i][j] == '.':
                     if max:
@@ -297,17 +316,17 @@ class Game:
                     self.current_state[i][j] = '.'
                     if max:
                         if value >= beta:
-                            self.countDepth += 1 
+                            self.countDepth += 1
                             return (value, x, y)
                         if value > alpha:
                             alpha = value
                     else:
                         if value <= alpha:
-                            self.countDepth += 1 
+                            self.countDepth += 1
                             return (value, x, y)
                         if value < beta:
                             beta = value
-        self.countDepth += 1        
+        self.countDepth += 1
         return (value, x, y)
 
     def e1(self, board, board_size, player, other_player):
@@ -323,13 +342,15 @@ class Game:
         # Computing row scores
         for i in board_range:
             player_score = sum(board[i][j] == player for j in board_range)
-            opponent_score = sum(board[i][j] == other_player for j in board_range)
+            opponent_score = sum(
+                board[i][j] == other_player for j in board_range)
             score += opponent_score - player_score
 
         # Computing column scores
         for j in board_range:
             player_score = sum(board[i][j] == player for i in board_range)
-            opponent_score = sum(board[i][j] == other_player for i in board_range)
+            opponent_score = sum(
+                board[i][j] == other_player for i in board_range)
             score += opponent_score - player_score
 
         # Computing first diagonal score
@@ -338,8 +359,10 @@ class Game:
         score += opponent_score - player_score
 
         # Computing second diagonal score
-        player_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
-        opponent_score = sum(board[i][board_size - 1 - i] == other_player for i in board_range)
+        player_score = sum(board[i][board_size - 1 - i]
+                           == player for i in board_range)
+        opponent_score = sum(
+            board[i][board_size - 1 - i] == other_player for i in board_range)
         score += opponent_score - player_score
 
         return score
@@ -349,14 +372,12 @@ class Game:
         More complex heuristic function that sums up the difference in the number of adjacent pieces 
         between the other player and the current player for each row, column and diagonal
         """
-        
+
         score = 0
 
         board_range = range(board_size)
 
-
         return score
-
 
     def play(self, algo=None, player_x=None, player_o=None):
         if algo == None:
@@ -396,9 +417,9 @@ class Game:
 
 def main():
     g = Game(recommend=True)
-    #print(g.e1(g.current_state,5,'X','O'))
-    g.play(algo=g.algo,player_x=g.player_1,player_o=g.player_2)
-	# g.play(algo=Game.MINIMAX,player_x=g.player_1,player_o=g.player_2)
+    # print(g.e1(g.current_state,5,'X','O'))
+    g.play(algo=g.algo, player_x=g.player_1, player_o=g.player_2)
+    # g.play(algo=Game.MINIMAX,player_x=g.player_1,player_o=g.player_2)
 
 
 if __name__ == "__main__":
