@@ -251,7 +251,8 @@ class Game:
 
 	def e2(self, player, other_player):
 		"""
-		Stronger heuristic function that sums up the difference in the number of possible threats (winning next piece placements)
+		Stronger heuristic function that sums up the difference in the number of adjacent pieces,
+		giving more weight to longest adjacencies.
 		"""
 		
 		score = 0
@@ -271,7 +272,9 @@ class Game:
 			opponent_score = self.consecutive_score(a[i,:],other_player)
 			score += opponent_score - player_score
 
+		# Getting diagonals from left to right
 		diags = [a[::-1,:].diagonal(i) for i in range(-a.shape[0]+1,a.shape[1])]
+		# Getting other diagonals
 		diags.extend(a.diagonal(i) for i in range(a.shape[1]-1,-a.shape[0],-1))
 
 		# Computing diagonal scores
