@@ -1,5 +1,7 @@
 # based on code from https://stackabuse.com/minimax-and-alpha-beta-pruning-in-python
-
+# from scipy.signal import convolve2d
+import numpy as np
+import numpy.ma as ma
 import time
 
 class Game:
@@ -13,13 +15,16 @@ class Game:
 		self.recommend = recommend
 		
 	def initialize_game(self):
-		self.current_state = [['X','.','.','O','X'],
+		self.current_state = [['X','X','O','O','X'],
 							  ['O','X','.','X','.'],
-							  ['O','O','.','.','.'],
-							  ['.','O','.','O','.'],
+							  ['O','O','.','X','.'],
+							  ['.','O','X','O','.'],
 							  ['X','X','.','.','X']]
 		# Player X always plays first
 		self.player_turn = 'X'
+		
+		self.n = 5
+		self.s = 4
 
 	def draw_board(self):
 		print()
@@ -187,7 +192,7 @@ class Game:
 							beta = value
 		return (value, x, y)
 
-	def e1(self, board, board_size, player, other_player):
+	def e1(self, player, other_player):
 		"""
 		Simple heuristic function that sums up the difference in the number of pieces 
 		between the other player and the current player for each row, column and the 2 main diagonals
@@ -195,43 +200,89 @@ class Game:
 		
 		score = 0
 
-		board_range = range(board_size)
+		board_range = range(self.n)
 
 		# Computing row scores
 		for i in board_range:
-			player_score = sum(board[i][j] == player for j in board_range)
-			opponent_score = sum(board[i][j] == other_player for j in board_range)
+			player_score = sum(self.current_state[i][j] == player for j in board_range)
+			opponent_score = sum(self.current_state[i][j] == other_player for j in board_range)
 			score += opponent_score - player_score
 
 		# Computing column scores
 		for j in board_range:
-			player_score = sum(board[i][j] == player for i in board_range)
-			opponent_score = sum(board[i][j] == other_player for i in board_range)
+			player_score = sum(self.current_state[i][j] == player for i in board_range)
+			opponent_score = sum(self.current_state[i][j] == other_player for i in board_range)
 			score += opponent_score - player_score
 
 		# Computing first diagonal score
-		player_score = sum(board[i][i] == player for i in board_range)
-		opponent_score = sum(board[i][i] == other_player for i in board_range)
+		player_score = sum(self.current_state[i][i] == player for i in board_range)
+		opponent_score = sum(self.current_state[i][i] == other_player for i in board_range)
 		score += opponent_score - player_score
 
 		# Computing second diagonal score
-		player_score = sum(board[i][board_size - 1 - i] == player for i in board_range)
-		opponent_score = sum(board[i][board_size - 1 - i] == other_player for i in board_range)
+		player_score = sum(self.current_state[i][self.n - 1 - i] == player for i in board_range)
+		opponent_score = sum(self.current_state[i][self.n - 1 - i] == other_player for i in board_range)
 		score += opponent_score - player_score
 
 		return score
 
-	def e2(self, board, board_size, player, other_player):
+	def appraise_count(self,count):
+		return count*count if count < self.s else pow(count,3)
+
+	def count_consecutive_items(self,lst,player):
+		prev = None
+		count = 0
+		for item in lst:
+			if item != player:
+				if prev and count:
+					yield count
+					prev = None
+				count = 0
+				continue
+			if item != prev and count:
+				yield count
+				count = 0
+			count += 1
+			prev = item
+		if prev and count:
+			yield count
+
+	def consecutive_score(self,lst,player):
+		return np.sum([self.appraise_count(c) for c in list(self.count_consecutive_items(lst,player))])
+
+	def e2(self, player, other_player):
 		"""
-		More complex heuristic function that sums up the difference in the number of adjacent pieces 
-		between the other player and the current player for each row, column and diagonal
+		Stronger heuristic function that sums up the difference in the number of possible threats (winning next piece placements)
 		"""
 		
 		score = 0
 
-		board_range = range(board_size)
+		board_range = range(self.n)
 
-	
+		a = np.array(self.current_state)
+
+		for i in board_range:
+			# Computing row scores
+			player_score = self.consecutive_score(a[:,i],player)
+			opponent_score = self.consecutive_score(a[:,i],other_player)
+			score += opponent_score - player_score
+
+			# Computing column scores
+			player_score = self.consecutive_score(a[i,:],player)
+			opponent_score = self.consecutive_score(a[i,:],other_player)
+			score += opponent_score - player_score
+
+		diags = [a[::-1,:].diagonal(i) for i in range(-a.shape[0]+1,a.shape[1])]
+		diags.extend(a.diagonal(i) for i in range(a.shape[1]-1,-a.shape[0],-1))
+
+		# Computing diagonal scores
+		for d in diags:
+			if len(d) < self.s:
+				continue
+			player_score = self.consecutive_score(d,player)
+			opponent_score = self.consecutive_score(d,other_player)
+			score += opponent_score - player_score
+		
 		return score
 
 	def play(self,algo=None,player_x=None,player_o=None):
@@ -272,7 +323,10 @@ def main():
 	g = Game(recommend=True)
 	# g.play(algo=Game.ALPHABETA,player_x=Game.AI,player_o=Game.AI)
 	# g.play(algo=Game.MINIMAX,player_x=Game.AI,player_o=Game.HUMAN)
-	print(g.e1(g.current_state,5,'X','O'))
+	print('e1: ')
+	print(g.e1('X','O'))
+	print('e2: ')
+	print(g.e2('X','O'))
 
 if __name__ == "__main__":
 	main()
