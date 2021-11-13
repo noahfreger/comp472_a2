@@ -84,6 +84,7 @@ class Game:
 
         # Display Board
         self.draw_board()
+
         # X always starts
         self.player_turn = 'X'
         self.other_player_turn = 'O'
@@ -460,11 +461,11 @@ class Game:
                     print(F'Evaluation time: {round(end - start, 7)}s')
                     print(F'Recommended move: x = {x}, y = {y}')
                 (x, y) = self.input_move()
+            self.move += 1
+            self.stats["heuristic_turn_count"] = 0
             self.draw_turn_stats(x, y)
             self.current_state[x][y] = self.player_turn
             self.draw_board()
-            self.move += 1
-            self.stats["heuristic_turn_count"] = 0
             if self.check_end():
                 return
             self.switch_player()
