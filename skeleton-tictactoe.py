@@ -1,5 +1,5 @@
 # based on code from https://stackabuse.com/minimax-and-alpha-beta-pruning-in-python
-# from scipy.signal import convolve2d
+
 import numpy as np
 import numpy.ma as ma
 import time
