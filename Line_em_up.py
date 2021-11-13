@@ -10,21 +10,62 @@ class Game:
 
     def __init__(self, recommend=True):
         self.initialize_game()
-
         self.recommend = recommend
-        self.n = 3
-        self.s = 3
-        self.countDepth = 0
 
     def initialize_game(self):
-        self.current_state = [
-                              ['.', '.', '.'],
-                              ['.', '.', '.'],
-                              ['.', '.', '.']]
-        # Player X always plays first
-		# print() TODO: print initial game params
+        print('Select the size of the board:')
+        self.n = int(input('Enter a value from 3-10: '))
+        print('Select the winning line-up size: ')
+        self.s = int(input('Enter a value from 3-' + str(self.n) +': '))
+        print(F'Select the max depth of the adversarial search for player 1: ')
+        self.d1 = int(input('Enter a value : '))
+        print(F'Select the max depth of the adversarial search for player 2: ')
+        self.d2 = int(input('Enter a value : '))
+        print(F'Select the max allowed time for the program to return a move: ')
+        self.t = int(input('Enter an amount of seconds : '))
+        print(F'Select whether minimax or alphabeta will be used: ')
+        self.a = bool(input('Enter False for minimax and True for alphabeta : '))
+        if self.a == True:
+            self.algo = Game.ALPHABETA
+        elif self.a == False:
+            self.algo = Game.MINIMAX
+        print(F'Select the play mode: ')
+        mode_select = str(input('Enter h-h if both player 1 and 2 are human, h-ai if player 1 is human and player 2 is AI, ai-h if player 1 is AI and player 2 is human and ai-ai if both players are ai : '))
+        if mode_select == "h-h":
+            self.player_1 = Game.HUMAN
+            self.player_2 = Game.HUMAN
+        elif mode_select == "h-ai":
+            self.player_1 = Game.HUMAN
+            self.player_2 = Game.AI
+        elif mode_select == "ai-h":
+            self.player_1 = Game.AI
+            self.player_2 = Game.HUMAN
+        elif mode_select == "ai-ai":
+            self.player_1 = Game.AI
+            self.player_2 = Game.AI
+        print(F'Select the number of blocks on the board:')
+        self.b = int(input('Enter a value : '))
+        self.b_array = []
+        for i in range(self.b):
+            x = ord(str(input('enter the x coordinate for block ' + str(i) + ' : ' ))) - 97
+            y = (int(input('enter the y coordinate for block ' + str(i) + ' : ' )))
+            self.b_array.append(tuple([x,y]))
+        self.current_state = []
+        for i in range(self.n):
+            row = []
+            for j in range(self.n):
+                row.append('.')
+            self.current_state.append(row)
+
+        for i in range(self.b):
+            x = self.b_array[i][0]
+            y = self.b_array[i][1]
+            self.current_state[x][y] = '*'
+
+        self.draw_board()
+        self.player_turn = 'X'
         print(F'n={self.n} b={self.b} s={self.s} t={self.t}')
-        
+
         self.player_turn = 'X'
 
     def reset_values(self):
@@ -45,31 +86,29 @@ class Game:
 
     def draw_board(self):
         print()
+        print("    ", end='')
+        for i in range(self.n):
+            print(chr(i+65), end='')
+        print()
+        print('  + ', end='')
+        for i in range(self.n):
+            print('-', end='')
+        print()
         for y in range(0, self.n):
+            print(str(y) + ' | ', end='')
             for x in range(0, self.n):
                 print(F'{self.current_state[x][y]}', end="")
             print()
         print()
 
-    def test1(self):
-        self.current_state = [['.', '.', '.','.','.'],
-                              ['.', '.', '.','.','.'],
-                              ['.', '.', '.','.','.'],
-                              ['.', '.', '.','.','.'],
-                              ['.', '.', '.','.','.']]
-        self.n = 5
-        self.s = 5
-        self.draw_board()                      
-        self.check_end()
-
     def is_valid(self, px, py):
-        if px < 0 or px > 2 or py < 0 or py > 2:
+        if px < 0 or px > self.n or py < 0 or py > self.n:
             return False
-        elif self.current_state[px][py] != '.':
+        elif self.current_state[px][py] != '.' and self.current_state[px][py] != '*':
             return False
         else:
             return True
-
+            
     def is_end(self):
         # Vertical win
         for i in range(0, self.n):
@@ -309,9 +348,8 @@ class Game:
 
 def main():
     g = Game(recommend=True)
-    #g.test1()
-    g.play(algo=Game.MINIMAX, player_x=Game.AI, player_o=Game.AI)
-    #g.play(algo=Game.ALPHABETA, player_x=Game.AI, player_o=Game.HUMAN)
+    g.play(algo=g.algo,player_x=g.player_1,player_o=g.player_2)
+	# g.play(algo=Game.MINIMAX,player_x=g.player_1,player_o=g.player_2)
 
 
 if __name__ == "__main__":
