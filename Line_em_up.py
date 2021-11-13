@@ -1,5 +1,6 @@
 # based on code from https://stackabuse.com/minimax-and-alpha-beta-pruning-in-python
 
+import numpy as np
 import time
 
 
@@ -14,23 +15,26 @@ class Game:
         self.recommend = recommend
 
     def initialize_game(self):
+        self.move = 0
         # Get inputs from human
         print('Select the size of the board:')
         self.n = int(input('Enter a value from 3-10: '))
         print('Select the winning line-up size: ')
         self.s = int(input('Enter a value from 3-' + str(self.n) + ': '))
         print(F'Select the max depth of the adversarial search for player 1: ')
-        self.d1 = int(input('Enter a value : '))
+        d1 = int(input('Enter a value : '))
+        self.player_1_strat = tuple([d1, self.e1])
         print(F'Select the max depth of the adversarial search for player 2: ')
-        self.d2 = int(input('Enter a value : '))
+        d2 = int(input('Enter a value : '))
+        self.player_2_strat = tuple([d2, self.e2])
+
         print(F'Select the max allowed time for the program to return a move: ')
         self.t = int(input('Enter an amount of seconds : '))
         print(F'Select whether minimax or alphabeta will be used: ')
-        self.a = bool(
-            input('Enter False for minimax and True for alphabeta : '))
-        if self.a == True:
+        self.a = input('Enter False for minimax and True for alphabeta : ')
+        if self.a == "True":
             self.algo = Game.ALPHABETA
-        elif self.a == False:
+        elif self.a == "False":
             self.algo = Game.MINIMAX
         print(F'Select the play mode: ')
         mode_select = str(input(
@@ -63,49 +67,70 @@ class Game:
             for j in range(self.n):
                 row.append('.')
             self.current_state.append(row)
-        self.draw_board()
         for i in range(self.b):
             x = self.b_array[i][0]
             y = self.b_array[i][1]
             self.current_state[x][y] = '*'
 
         # Display Initial Game info
+        print()
         print(F'n={self.n} b={self.b} s={self.s} t={self.t}')
         print(F'blocs={self.b_array}')
         print()
-        print(F'Player 1: {self.player_1} d={self.d1} a={self.a} e1(regular)')
         print(
-            F'Player 2: {self.player_2} d={self.d2} a={self.a} e1(defensive)')
+            F'Player 1: {self.player_1} d={self.player_1_strat[0]} a={self.a} e1(regular)')
+        print(
+            F'Player 2: {self.player_2} d={self.player_2_strat[0]} a={self.a} e2(defensive)')
 
         # Display Board
         self.draw_board()
         # X always starts
         self.player_turn = 'X'
-
-    def reset_values(self):
-        self.time = 0
-        self.eval_depth = 0
-        self.depthList = []
-        self.avg_eval_depth = 0
-        avg_recursion_depth = 0
+        self.other_player_turn = 'O'
+        self.stats = {
+            "heuristic_turn_count": 0,
+            "total_heuristic_count": 0,
+            "depth_list": [],
+            "eval_time": 0,
+            "total_eval_time": 0
+        }
 
     def draw_end_game_stats(self):
         print()
 
     def draw_turn_stats(self, x, y):
-        print(F'Evaluation time: {self.time}s')
         print(
             F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
+        print()
+        print(F'i   Evaluation time: {self.stats["eval_time"]}s')
         print(
-            F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
+            F'ii  Heuristic evaluations: {self.stats["heuristic_turn_count"]}')
         print(
-            F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
+            F'iii Evaluations by depth: {self.stats["heuristic_turn_count"]}')
+        print(
+            F'iv  Average evaluation depth: {self.stats["heuristic_turn_count"]}')
+        print(
+            F'v   Average recursion depth evaluations: {self.stats["heuristic_turn_count"]}')
+
+    def test(self):
+        self.current_state = [['X', '0', 'X'],
+                              ['0', 'X', 'X'],
+                              ['0', '0', 'X']]
+
+        self.n = 3
+        self.s = 3
+        self.move = 0
+        self.draw_board()
+        self.player_turn = 'X'
+        self.check_end()
 
     def draw_board(self):
         print()
         print("    ", end='')
         for i in range(self.n):
             print(chr(i+65), end='')
+        if self.move != 0:
+            print(F'    move #{self.move}', end="")
         print()
         print('  + ', end='')
         for i in range(self.n):
@@ -128,75 +153,36 @@ class Game:
 
     def is_end(self):
         # Vertical win
-        for i in range(0, self.n):
-            count = 1
-            for j in range(0, self.n - 1):
-                item = self.current_state[i][j]
-                nextItem = self.current_state[i][j+1]
-                if(item == '.' or item == '*' or item != nextItem):
-                    count = 1
-                else:
-                    count += 1
-                    if(count == self.s):
-                        return nextItem
-        # Horizontal win
-        for j in range(0, self.n):
-            count = 1
-            for i in range(0, self.n - 1):
-                item = self.current_state[i][j]
-                nextItem = self.current_state[i+1][j]
-                if(item == '.' or item == '*' or item != nextItem):
-                    count = 1
-                else:
-                    count += 1
-                    if(count == self.s):
-                        return nextItem
+        a = np.array(self.current_state)
 
-        # First diagonal win (from left to right)
-        # we start at n-3 and end at -n+2 because minimum possible win condition is 3 in a row
-        for i in range(self.n - 3, - self.n + 2, -1):
-            count = 1
-            # Different end condition for left of main diagnol
-            end = self.n - i - 1 if i > 0 else self.n - 2 - (abs(i) - 1)
-            for j in range(0, end):
-                if(i >= 0):
-                    item = self.current_state[i + j][j]
-                    nextItem = self.current_state[i + j + 1][j + 1]
-                else:
-                    item = self.current_state[j][abs(i) + j]
-                    nextItem = self.current_state[j + 1][abs(i) + j + 1]
-                if(item == '.' or item == '*' or item != nextItem):
-                    count = 1
-                else:
-                    count += 1
-                    if(count == self.s):
-                        return nextItem
+        for i in range(self.n):
+            for c in list(self.count_consecutive_items(a[i, :], self.player_turn)):
+                if c == self.s:
+                    return self.player_turn
 
-        # Second diagonal win (from right to left)
-        for i in range(self.n - 3, self.n + 2):
-            count = 1
-            # Different end condition for left of main diagnol
-            end = i if i <= self.n - 1 else self.n - 2 - (i - self.n)
-            for j in range(0, end):
-                if(i <= self.n - 1):
-                    item = self.current_state[i - j][j]
-                    nextItem = self.current_state[i - j - 1][j + 1]
-                else:
-                    item = self.current_state[self.n -
-                                              j - 1][j + i - self.n + 1]
-                    nextItem = self.current_state[self.n -
-                                                  j - 2][j + i - self.n + 2]
-                if(item == '.' or item == '*' or item != nextItem):
-                    count = 1
-                else:
-                    count += 1
-                    # Checks the win condition
-                    if(count == self.s):
-                        return nextItem
+        for i in range(self.n):
+            for c in list(self.count_consecutive_items(a[:, i], self.player_turn)):
+                if c == self.s:
+                    return self.player_turn
+
+        # Getting diagonals from left to right
+        diags = [a[::-1, :].diagonal(i)
+                 for i in range(-a.shape[0]+1, a.shape[1])]
+        # Getting other diagonals
+        diags.extend(a.diagonal(i)
+                     for i in range(a.shape[1]-1, -a.shape[0], -1))
+
+        # Diagonal win
+        for d in diags:
+            if len(d) < self.s:
+                continue
+            for c in list(self.count_consecutive_items(d, self.player_turn)):
+                if c == self.s:
+                    return self.player_turn
 
         # Is whole board full?
-        for i in range(0, self.n):
-            for j in range(0, self.n):
+        for i in range(self.n):
+            for j in range(self.n):
                 # There's an empty field, we continue the game
                 if (self.current_state[i][j] == '.'):
                     return None
@@ -213,7 +199,6 @@ class Game:
                 print('The winner is O!')
             elif self.result == '.':
                 print("It's a tie!")
-            self.initialize_game()
         return self.result
 
     def input_move(self):
@@ -229,20 +214,22 @@ class Game:
     def switch_player(self):
         if self.player_turn == 'X':
             self.player_turn = 'O'
+            self.other_player_turn = 'X'
         elif self.player_turn == 'O':
+            self.other_player_turn = 'O'
             self.player_turn = 'X'
         return self.player_turn
 
-    def minimax(self, max=False):
+    def minimax(self, depth, max=False):
         # Minimizing for 'X' and maximizing for 'O'
         # Possible values are:
         # -1 - win for 'X'
         # 0  - a tie
         # 1  - loss for 'X'
         # We're initially setting it to 2 or -2 as worse than the worst case:
-        value = 2
+        value = 1000
         if max:
-            value = -2
+            value = -1000
         x = None
         y = None
         result = self.is_end()
@@ -252,25 +239,32 @@ class Game:
             return (1, x, y)
         elif result == '.':
             return (0, x, y)
+
+        strat = self.player_1_strat if self.player_turn == 'X' else self.player_2_strat
+
+        if depth == 0:
+            self.stats["heuristic_turn_count"] += 1
+            score = strat[1](self.player_turn, self.other_player_turn)
+            return (score, x, y)
+
         for i in range(0, self.n):
             for j in range(0, self.n):
                 if self.current_state[i][j] == '.':
                     if max:
                         self.current_state[i][j] = 'O'
-                        (v, _, _,) = self.minimax(max=False)
+                        (v, _, _,) = self.minimax(depth - 1, max=False)
                         if v > value:
                             value = v
                             x = i
                             y = j
                     else:
                         self.current_state[i][j] = 'X'
-                        (v, _, _) = self.minimax(max=True)
+                        (v, _, _) = self.minimax(depth - 1, max=True)
                         if v < value:
                             value = v
                             x = i
                             y = j
                     self.current_state[i][j] = '.'
-                    self.countDepth += 1
         return (value, x, y)
 
     def alphabeta(self, alpha=-2, beta=2, max=False):
@@ -280,7 +274,7 @@ class Game:
         # 0  - a tie
         # 1  - loss for 'X'
         # We're initially setting it to 2 or -2 as worse than the worst case:
-        self.countDepth = 0
+
         value = 2
         if max:
             value = -2
@@ -288,13 +282,10 @@ class Game:
         y = None
         result = self.is_end()
         if result == 'X':
-            self.countDepth += 1
             return (-1, x, y)
         elif result == 'O':
-            self.countDepth += 1
             return (1, x, y)
         elif result == '.':
-            self.countDepth += 1
             return (0, x, y)
         for i in range(0, self.n):
             for j in range(0, self.n):
@@ -316,20 +307,17 @@ class Game:
                     self.current_state[i][j] = '.'
                     if max:
                         if value >= beta:
-                            self.countDepth += 1
                             return (value, x, y)
                         if value > alpha:
                             alpha = value
                     else:
                         if value <= alpha:
-                            self.countDepth += 1
                             return (value, x, y)
                         if value < beta:
                             beta = value
-        self.countDepth += 1
         return (value, x, y)
 
-    def e1(self, board, board_size, player, other_player):
+    def e1(self, player, other_player):
         """
         Simple heuristic function that sums up the difference in the number of pieces 
         between the other player and the current player for each row, column and the 2 main diagonals
@@ -337,45 +325,101 @@ class Game:
 
         score = 0
 
-        board_range = range(board_size)
+        board_range = range(self.n)
 
         # Computing row scores
         for i in board_range:
-            player_score = sum(board[i][j] == player for j in board_range)
+            player_score = sum(
+                self.current_state[i][j] == player for j in board_range)
             opponent_score = sum(
-                board[i][j] == other_player for j in board_range)
+                self.current_state[i][j] == other_player for j in board_range)
             score += opponent_score - player_score
 
         # Computing column scores
         for j in board_range:
-            player_score = sum(board[i][j] == player for i in board_range)
+            player_score = sum(
+                self.current_state[i][j] == player for i in board_range)
             opponent_score = sum(
-                board[i][j] == other_player for i in board_range)
+                self.current_state[i][j] == other_player for i in board_range)
             score += opponent_score - player_score
 
         # Computing first diagonal score
-        player_score = sum(board[i][i] == player for i in board_range)
-        opponent_score = sum(board[i][i] == other_player for i in board_range)
+        player_score = sum(
+            self.current_state[i][i] == player for i in board_range)
+        opponent_score = sum(
+            self.current_state[i][i] == other_player for i in board_range)
         score += opponent_score - player_score
 
         # Computing second diagonal score
-        player_score = sum(board[i][board_size - 1 - i]
-                           == player for i in board_range)
+        player_score = sum(
+            self.current_state[i][self.n - 1 - i] == player for i in board_range)
         opponent_score = sum(
-            board[i][board_size - 1 - i] == other_player for i in board_range)
+            self.current_state[i][self.n - 1 - i] == other_player for i in board_range)
         score += opponent_score - player_score
 
         return score
 
-    def e2(self, board, board_size, player, other_player):
+    def appraise_count(self, count):
+        return count*count if count < self.s else pow(count, 3)
+
+    def count_consecutive_items(self, lst, player):
+        prev = None
+        count = 0
+        for item in lst:
+            if item != player:
+                if prev and count:
+                    yield count
+                    prev = None
+                count = 0
+                continue
+            if item != prev and count:
+                yield count
+                count = 0
+            count += 1
+            prev = item
+        if prev and count:
+            yield count
+
+    def consecutive_score(self, lst, player):
+        return np.sum([self.appraise_count(c) for c in list(self.count_consecutive_items(lst, player))])
+
+    def e2(self, player, other_player):
         """
-        More complex heuristic function that sums up the difference in the number of adjacent pieces 
-        between the other player and the current player for each row, column and diagonal
+        Stronger heuristic function that sums up the difference in the number of adjacent pieces,
+        giving more weight to longest adjacencies.
         """
 
         score = 0
 
-        board_range = range(board_size)
+        board_range = range(self.n)
+
+        a = np.array(self.current_state)
+
+        for i in board_range:
+            # Computing row scores
+            player_score = self.consecutive_score(a[:, i], player)
+            opponent_score = self.consecutive_score(a[:, i], other_player)
+            score += opponent_score - player_score
+
+            # Computing column scores
+            player_score = self.consecutive_score(a[i, :], player)
+            opponent_score = self.consecutive_score(a[i, :], other_player)
+            score += opponent_score - player_score
+
+        # Getting diagonals from left to right
+        diags = [a[::-1, :].diagonal(i)
+                 for i in range(-a.shape[0]+1, a.shape[1])]
+        # Getting other diagonals
+        diags.extend(a.diagonal(i)
+                     for i in range(a.shape[1]-1, -a.shape[0], -1))
+
+        # Computing diagonal scores
+        for d in diags:
+            if len(d) < self.s:
+                continue
+            player_score = self.consecutive_score(d, player)
+            opponent_score = self.consecutive_score(d, other_player)
+            score += opponent_score - player_score
 
         return score
 
@@ -387,37 +431,39 @@ class Game:
         if player_o == None:
             player_o = self.HUMAN
         while True:
-            self.draw_board()
+            self.move += 1
+            self.stats["heuristic_turn_count"] = 0
             if self.check_end():
                 return
             start = time.time()
             if algo == self.MINIMAX:
                 if self.player_turn == 'X':
-                    (_, x, y) = self.minimax(max=False)
+                    (_, x, y) = self.minimax(self.player_1_strat[0], max=False)
                 else:
-                    (_, x, y) = self.minimax(max=True)
+                    (_, x, y) = self.minimax(self.player_2_strat[0], max=True)
             else:  # algo == self.ALPHABETA
                 if self.player_turn == 'X':
-                    (m, x, y) = self.alphabeta(max=False)
+                    (m, x, y) = self.alphabeta(
+                        self.player_1_strat[0], max=False)
                 else:
-                    (m, x, y) = self.alphabeta(max=True)
+                    (m, x, y) = self.alphabeta(
+                        self.player_2_strat[0], max=True)
             end = time.time()
-            self.time = round(end - start, 7)
+            self.stats["eval_time"] = round(end - start, 7)
             if (self.player_turn == 'X' and player_x == self.HUMAN) or (self.player_turn == 'O' and player_o == self.HUMAN):
                 if self.recommend:
                     print(F'Evaluation time: {round(end - start, 7)}s')
                     print(F'Recommended move: x = {x}, y = {y}')
                 (x, y) = self.input_move()
-                self.draw_turn_stats(x, y)
-            if (self.player_turn == 'X' and player_x == self.AI) or (self.player_turn == 'O' and player_o == self.AI):
-                self.draw_turn_stats(x, y)
+            self.draw_turn_stats(x, y)
             self.current_state[x][y] = self.player_turn
+            self.draw_board()
             self.switch_player()
 
 
 def main():
     g = Game(recommend=True)
-    # print(g.e1(g.current_state,5,'X','O'))
+    # g.test()
     g.play(algo=g.algo, player_x=g.player_1, player_o=g.player_2)
     # g.play(algo=Game.MINIMAX,player_x=g.player_1,player_o=g.player_2)
 
