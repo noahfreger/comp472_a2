@@ -267,17 +267,17 @@ class Game:
                     self.current_state[i][j] = '.'
         return (value, x, y)
 
-    def alphabeta(self, alpha=-2, beta=2, max=False):
+    def alphabeta(self, depth, alpha=-1000, beta=1000, max=False):
         # Minimizing for 'X' and maximizing for 'O'
         # Possible values are:
         # -1 - win for 'X'
         # 0  - a tie
         # 1  - loss for 'X'
-        # We're initially setting it to 2 or -2 as worse than the worst case:
+        # We're initially setting it to 1000 or -1000 as worse than the worst case:
 
-        value = 2
+        value = 1000
         if max:
-            value = -2
+            value = -1000
         x = None
         y = None
         result = self.is_end()
@@ -287,19 +287,28 @@ class Game:
             return (1, x, y)
         elif result == '.':
             return (0, x, y)
+        strat = self.player_1_strat if self.player_turn == 'X' else self.player_2_strat
+
+        if depth == 0:
+            self.stats["heuristic_turn_count"] += 1
+            score = strat[1](self.player_turn, self.other_player_turn)
+            return (score, x, y)
+
         for i in range(0, self.n):
             for j in range(0, self.n):
                 if self.current_state[i][j] == '.':
                     if max:
                         self.current_state[i][j] = 'O'
-                        (v, _, _) = self.alphabeta(alpha, beta, max=False)
+                        (v, _, _) = self.alphabeta(depth - 1,
+                                                   alpha, beta, max=False)
                         if v > value:
                             value = v
                             x = i
                             y = j
                     else:
                         self.current_state[i][j] = 'X'
-                        (v, _, _) = self.alphabeta(alpha, beta, max=True)
+                        (v, _, _) = self.alphabeta(depth - 1,
+                                                   alpha, beta, max=True)
                         if v < value:
                             value = v
                             x = i
