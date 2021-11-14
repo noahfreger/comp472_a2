@@ -89,9 +89,9 @@ class Game:
         print(F'\nn={self.n} b={self.b} s={self.s} t={self.t}')
         print(F'blocs={self.b_array}')
         print(
-            F'\nPlayer 1: {self.player_1} d={self.player_1_strat[0]} a={self.current_player.ToString()} e1(regular)')
+            F'\nPlayer 1: {self.player_1} d={self.player_1_strat[0]} a={self.current_player} e1(regular)')
         print(
-            F'Player 2: {self.player_2} d={self.player_2_strat[0]} a={self.current_player.ToString()} e2(defensive)')
+            F'Player 2: {self.player_2} d={self.player_2_strat[0]} a={self.current_player} e2(defensive)')
 
         # Display Board
         self.draw_board()
