@@ -1,5 +1,6 @@
 # based on code from https://stackabuse.com/minimax-and-alpha-beta-pruning-in-python
 
+import sys
 import numpy as np
 import time
 
@@ -16,6 +17,7 @@ class Game:
 
     def initialize_game(self):
         self.move = 0
+
         # Get inputs from human
         print('Select the size of the board:')
         self.n = int(input('Enter a value from 3-10: '))
@@ -71,69 +73,89 @@ class Game:
             x = self.b_array[i][0]
             y = self.b_array[i][1]
             self.current_state[x][y] = '*'
-
+        # X always starts
+        self.current_player = self.player_1
+        self.player_turn = 'X'
+        self.other_player_turn = 'O'
+        self.stats = {
+            "total_heuristic_count": 0,
+            "ard_list": [],
+            "depth_list": [],
+            "total_depth_list": [],
+            "eval_time": []
+        }
         # Display Initial Game info
-        print()
-        print(F'n={self.n} b={self.b} s={self.s} t={self.t}')
+        sys.stdout = open("output.txt", "w")
+        print(F'\nn={self.n} b={self.b} s={self.s} t={self.t}')
         print(F'blocs={self.b_array}')
-        print()
         print(
-            F'Player 1: {self.player_1} d={self.player_1_strat[0]} a={self.a} e1(regular)')
+            F'\nPlayer 1: {self.player_1} d={self.player_1_strat[0]} a={self.current_player.ToString()} e1(regular)')
         print(
-            F'Player 2: {self.player_2} d={self.player_2_strat[0]} a={self.a} e2(defensive)')
+            F'Player 2: {self.player_2} d={self.player_2_strat[0]} a={self.current_player.ToString()} e2(defensive)')
 
         # Display Board
         self.draw_board()
 
-        # X always starts
-        self.player_turn = 'X'
-        self.other_player_turn = 'O'
-        self.stats = {
-            "heuristic_turn_count": 0,
-            "total_heuristic_count": 0,
-            "depth_list": [],
-            "eval_time": 0,
-            "total_eval_time": 0
-        }
-
     def draw_end_game_stats(self):
-        print()
+        print(
+            F'\n6(b)i   Average evaluation time: {round(np.average(np.array(self.stats["eval_time"])),2)}s')
+        print(
+            F'6(b)ii  Total heuristic evaluations: {self.stats["total_heuristic_count"]}')
+        print("6(b)iii Total evaluations by depth: {", end='')
+        total_depth_list = self.group_by_sum(
+            np.array(self.stats["total_depth_list"]))
+        for info in total_depth_list:
+            print(str(round(info[0])) +
+                  ": " + str(round(info[1]))+", ", end="")
+        print("}")
+        print(
+            F'6(b)iv  Average evaluation depth: {round(np.average(np.array(self.stats["total_depth_list"])[:,0]),2)}')
+
+        # self.calculate_ARD(np.array(self.stats["total_depth_list"])[:, 0])
+
+        print(
+            F'6(b)v   Average recursion depth evaluations: {round(0,2)}')
+        print(
+            F'6(b)vi  Total moves: {self.move}')
 
     def draw_turn_stats(self, x, y):
         print(
-            F'Player {self.player_turn} under AI control plays: x = {x}, y = {y}')
+            F'Player {self.player_turn} under {self.current_player} control plays: {chr(x+65)}{y}')
+        print(
+            F'\ni   Evaluation time: {self.stats["eval_time"][self.move - 1]}s')
+
+        heuristic_turn_count = np.sum(np.array(self.stats["depth_list"])[:, 1])
+        self.stats["total_heuristic_count"] += heuristic_turn_count
+        print(
+            F'ii  Heuristic evaluations: {heuristic_turn_count}')
+        print("iii Evaluations by depth: {", end='')
+        depth_list = self.group_by_sum(np.array(self.stats["depth_list"]))
+
+        for info in depth_list:
+            self.stats["total_depth_list"].append(tuple([info[0], info[1]]))
+            print(str(round(info[0])) +
+                  ": " + str(round(info[1]))+", ", end="")
+        print("}")
+        print(
+            F'iv  Average evaluation depth: {round(np.average(np.array(self.stats["depth_list"])[:,0]),1)}')
+        print(
+            F'v   Average recursion depth evaluations: {0}')
+
+    def group_by_sum(self, list):
+        u, idx = np.unique(list[:, 0], return_inverse=True)
+        s = np.bincount(idx, weights=list[:, 1])
+        return np.c_[u, s]
+
+    def calculate_ARD(self, list):
         print()
-        print(F'i   Evaluation time: {self.stats["eval_time"]}s')
-        print(
-            F'ii  Heuristic evaluations: {self.stats["heuristic_turn_count"]}')
-        print(
-            F'iii Evaluations by depth: {self.stats["heuristic_turn_count"]}')
-        print(
-            F'iv  Average evaluation depth: {self.stats["heuristic_turn_count"]}')
-        print(
-            F'v   Average recursion depth evaluations: {self.stats["heuristic_turn_count"]}')
-
-    def test(self):
-        self.current_state = [['X', '0', 'X'],
-                              ['0', 'X', 'X'],
-                              ['0', '0', 'X']]
-
-        self.n = 3
-        self.s = 3
-        self.move = 0
-        self.draw_board()
-        self.player_turn = 'X'
-        self.check_end()
 
     def draw_board(self):
-        print()
-        print("    ", end='')
+        print("\n    ", end='')
         for i in range(self.n):
             print(chr(i+65), end='')
         if self.move != 0:
-            print(F'    move #{self.move}', end="")
-        print()
-        print('  + ', end='')
+            print(F'    (move #{self.move})', end="")
+        print('\n  + ', end='')
         for i in range(self.n):
             print('-', end='')
         print()
@@ -214,14 +236,16 @@ class Game:
 
     def switch_player(self):
         if self.player_turn == 'X':
+            self.current_player = self.player_2
             self.player_turn = 'O'
             self.other_player_turn = 'X'
         elif self.player_turn == 'O':
+            self.current_player = self.player_1
             self.other_player_turn = 'O'
             self.player_turn = 'X'
         return self.player_turn
 
-    def minimax(self, depth, max=False):
+    def minimax(self, max_depth, depth=0, max=False):
         # Minimizing for 'X' and maximizing for 'O'
         # Possible values are:
         # -1 - win for 'X'
@@ -234,33 +258,42 @@ class Game:
         x = None
         y = None
         result = self.is_end()
-        if result == 'X':
-            return (-1, x, y)
-        elif result == 'O':
-            return (1, x, y)
-        elif result == '.':
-            return (0, x, y)
 
         strat = self.player_1_strat if self.player_turn == 'X' else self.player_2_strat
 
-        if depth == 0:
-            self.stats["heuristic_turn_count"] += 1
+        if max_depth == 0:
+            self.stats["depth_list"].append(
+                tuple([depth, 1]))
             score = strat[1](self.player_turn, self.other_player_turn)
             return (score, x, y)
+        elif result == 'X':
+            self.stats["depth_list"].append(
+                tuple([depth, 1]))
+            return (-1, x, y)
+        elif result == 'O':
+            self.stats["depth_list"].append(
+                tuple([depth, 1]))
+            return (1, x, y)
+        elif result == '.':
+            self.stats["depth_list"].append(
+                tuple([depth, 1]))
+            return (0, x, y)
 
         for i in range(0, self.n):
             for j in range(0, self.n):
                 if self.current_state[i][j] == '.':
                     if max:
                         self.current_state[i][j] = 'O'
-                        (v, _, _,) = self.minimax(depth - 1, max=False)
+                        (v, _, _,) = self.minimax(
+                            max_depth - 1, depth + 1, max=False)
                         if v > value:
                             value = v
                             x = i
                             y = j
                     else:
                         self.current_state[i][j] = 'X'
-                        (v, _, _) = self.minimax(depth - 1, max=True)
+                        (v, _, _) = self.minimax(
+                            max_depth - 1, depth + 1, max=True)
                         if v < value:
                             value = v
                             x = i
@@ -268,7 +301,7 @@ class Game:
                     self.current_state[i][j] = '.'
         return (value, x, y)
 
-    def alphabeta(self, depth, alpha=-1000, beta=1000, max=False):
+    def alphabeta(self, max_depth, depth=0, alpha=-1000, beta=1000, max=False):
         # Minimizing for 'X' and maximizing for 'O'
         # Possible values are:
         # -1 - win for 'X'
@@ -282,25 +315,32 @@ class Game:
         x = None
         y = None
         result = self.is_end()
-        if result == 'X':
-            return (-1, x, y)
-        elif result == 'O':
-            return (1, x, y)
-        elif result == '.':
-            return (0, x, y)
+
         strat = self.player_1_strat if self.player_turn == 'X' else self.player_2_strat
 
-        if depth == 0:
-            self.stats["heuristic_turn_count"] += 1
+        if max_depth == 0:
+            self.stats["depth_list"].append(
+                tuple([depth, 1]))
             score = strat[1](self.player_turn, self.other_player_turn)
             return (score, x, y)
-
+        elif result == 'X':
+            self.stats["depth_list"].append(
+                tuple([depth, 1]))
+            return (-1, x, y)
+        elif result == 'O':
+            self.stats["depth_list"].append(
+                tuple([depth, 1]))
+            return (1, x, y)
+        elif result == '.':
+            self.stats["depth_list"].append(
+                tuple([depth, 1]))
+            return (0, x, y)
         for i in range(0, self.n):
             for j in range(0, self.n):
                 if self.current_state[i][j] == '.':
                     if max:
                         self.current_state[i][j] = 'O'
-                        (v, _, _) = self.alphabeta(depth - 1,
+                        (v, _, _) = self.alphabeta(max_depth - 1, depth + 1,
                                                    alpha, beta, max=False)
                         if v > value:
                             value = v
@@ -308,7 +348,7 @@ class Game:
                             y = j
                     else:
                         self.current_state[i][j] = 'X'
-                        (v, _, _) = self.alphabeta(depth - 1,
+                        (v, _, _) = self.alphabeta(max_depth - 1, depth + 1,
                                                    alpha, beta, max=True)
                         if v < value:
                             value = v
@@ -441,6 +481,7 @@ class Game:
         if player_o == None:
             player_o = self.HUMAN
         while True:
+            self.stats["depth_list"] = []
             start = time.time()
             if algo == self.MINIMAX:
                 if self.player_turn == 'X':
@@ -455,26 +496,26 @@ class Game:
                     (m, x, y) = self.alphabeta(
                         self.player_2_strat[0], max=True)
             end = time.time()
-            self.stats["eval_time"] = round(end - start, 7)
+            self.stats["eval_time"].append(round(end - start, 2))
             if (self.player_turn == 'X' and player_x == self.HUMAN) or (self.player_turn == 'O' and player_o == self.HUMAN):
                 if self.recommend:
                     print(F'Evaluation time: {round(end - start, 7)}s')
                     print(F'Recommended move: x = {x}, y = {y}')
                 (x, y) = self.input_move()
             self.move += 1
-            self.stats["heuristic_turn_count"] = 0
             self.draw_turn_stats(x, y)
             self.current_state[x][y] = self.player_turn
             self.draw_board()
             if self.check_end():
+                self.draw_end_game_stats()
                 return
             self.switch_player()
 
 
 def main():
     g = Game(recommend=True)
-    # g.test()
     g.play(algo=g.algo, player_x=g.player_1, player_o=g.player_2)
+    sys.stdout.close()
     # g.play(algo=Game.MINIMAX,player_x=g.player_1,player_o=g.player_2)
 
 
