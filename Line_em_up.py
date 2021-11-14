@@ -42,17 +42,17 @@ class Game:
         mode_select = str(input(
             'Enter h-h if both player 1 and 2 are human, h-ai if player 1 is human and player 2 is AI, ai-h if player 1 is AI and player 2 is human and ai-ai if both players are ai : '))
         if mode_select == "h-h":
-            self.player_1 = Game.HUMAN
-            self.player_2 = Game.HUMAN
+            self.player_1 = "HUMAN"
+            self.player_2 = "HUMAN"
         elif mode_select == "h-ai":
-            self.player_1 = Game.HUMAN
-            self.player_2 = Game.AI
+            self.player_1 = "HUMAN"
+            self.player_2 = "AI"
         elif mode_select == "ai-h":
-            self.player_1 = Game.AI
-            self.player_2 = Game.HUMAN
+            self.player_1 = "AI"
+            self.player_2 = "HUMAN"
         elif mode_select == "ai-ai":
-            self.player_1 = Game.AI
-            self.player_2 = Game.AI
+            self.player_1 = "AI"
+            self.player_2 = "AI"
         print(F'Select the number of blocks on the board:')
         # Get Coordinate and Number of blocks for board
         self.b = int(input('Enter a value : '))
@@ -82,10 +82,10 @@ class Game:
             "ard_list": [],
             "depth_list": [],
             "total_depth_list": [],
-            "eval_time": []
+            "eval_time_list": []
         }
         # Display Initial Game info
-        sys.stdout = open("output.txt", "w")
+        # sys.stdout = open("output.txt", "w")
         print(F'\nn={self.n} b={self.b} s={self.s} t={self.t}')
         print(F'blocs={self.b_array}')
         print(
@@ -98,7 +98,7 @@ class Game:
 
     def draw_end_game_stats(self):
         print(
-            F'\n6(b)i   Average evaluation time: {round(np.average(np.array(self.stats["eval_time"])),2)}s')
+            F'\n6(b)i   Average evaluation time: {round(np.average(np.array(self.stats["eval_time_list"])),2)}s')
         print(
             F'6(b)ii  Total heuristic evaluations: {self.stats["total_heuristic_count"]}')
         print("6(b)iii Total evaluations by depth: {", end='')
@@ -114,7 +114,7 @@ class Game:
         # self.calculate_ARD(np.array(self.stats["total_depth_list"])[:, 0])
 
         print(
-            F'6(b)v   Average recursion depth evaluations: {round(0,2)}')
+            F'6(b)v   Average recursion depth evaluations: {round(np.average(np.array(self.stats["ard_list"])),2)}')
         print(
             F'6(b)vi  Total moves: {self.move}')
 
@@ -122,7 +122,7 @@ class Game:
         print(
             F'Player {self.player_turn} under {self.current_player} control plays: {chr(x+65)}{y}')
         print(
-            F'\ni   Evaluation time: {self.stats["eval_time"][self.move - 1]}s')
+            F'\ni   Evaluation time: {self.stats["eval_time_list"][self.move - 1]}s')
 
         heuristic_turn_count = np.sum(np.array(self.stats["depth_list"])[:, 1])
         self.stats["total_heuristic_count"] += heuristic_turn_count
@@ -137,9 +137,9 @@ class Game:
                   ": " + str(round(info[1]))+", ", end="")
         print("}")
         print(
-            F'iv  Average evaluation depth: {round(np.average(np.array(self.stats["depth_list"])[:,0]),1)}')
+            F'iv  Average evaluation depth: {round(np.average(np.array(self.stats["depth_list"])[:,0]),2)}')
         print(
-            F'v   Average recursion depth evaluations: {0}')
+            F'v   Average recursion depth evaluations: {self.stats["ard_list"][self.move - 1]}')
 
     def group_by_sum(self, list):
         u, idx = np.unique(list[:, 0], return_inverse=True)
@@ -245,111 +245,121 @@ class Game:
             self.player_turn = 'X'
         return self.player_turn
 
-    def minimax(self, max_depth, depth=0, max=False):
+    def minimax(self, depth=0, max=False):
         # Minimizing for 'X' and maximizing for 'O'
         # Possible values are:
         # -1 - win for 'X'
         # 0  - a tie
         # 1  - loss for 'X'
         # We're initially setting it to 2 or -2 as worse than the worst case:
-        value = 1000
+        value = sys.maxsize
         if max:
-            value = -1000
+            value = -sys.maxsize - 1
         x = None
         y = None
         result = self.is_end()
 
         strat = self.player_1_strat if self.player_turn == 'X' else self.player_2_strat
 
-        if max_depth == 0:
+        if result == 'X':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
-            score = strat[1](self.player_turn, self.other_player_turn)
-            return (score, x, y)
-        elif result == 'X':
-            self.stats["depth_list"].append(
-                tuple([depth, 1]))
-            return (-1, x, y)
+            return (-sys.maxsize - 1, x, y, depth)
         elif result == 'O':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
-            return (1, x, y)
+            return (sys.maxsize, x, y, depth)
         elif result == '.':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
-            return (0, x, y)
+            return (0, x, y, depth)
+        elif strat[0] == depth:
+            self.stats["depth_list"].append(
+                tuple([depth, 1]))
+            score = strat[1](self.player_turn, self.other_player_turn)
+            return (score, x, y, depth)
+
+        ard_list = []
 
         for i in range(0, self.n):
             for j in range(0, self.n):
                 if self.current_state[i][j] == '.':
                     if max:
                         self.current_state[i][j] = 'O'
-                        (v, _, _,) = self.minimax(
-                            max_depth - 1, depth + 1, max=False)
+                        (v, _, _, ard) = self.minimax(depth + 1, max=False)
+
+                        ard_list.append(ard)
+
                         if v > value:
                             value = v
                             x = i
                             y = j
                     else:
                         self.current_state[i][j] = 'X'
-                        (v, _, _) = self.minimax(
-                            max_depth - 1, depth + 1, max=True)
+                        (v, _, _, ard) = self.minimax(depth + 1, max=True)
+
+                        ard_list.append(ard)
+
                         if v < value:
                             value = v
                             x = i
                             y = j
                     self.current_state[i][j] = '.'
-        return (value, x, y)
+        return (value, x, y, np.average(np.array(ard_list)))
 
-    def alphabeta(self, max_depth, depth=0, alpha=-1000, beta=1000, max=False):
+    def alphabeta(self, depth=0, alpha=-sys.maxsize-1, beta=sys.maxsize, max=False):
         # Minimizing for 'X' and maximizing for 'O'
         # Possible values are:
-        # -1 - win for 'X'
+        # -infinite - win for 'X'
         # 0  - a tie
-        # 1  - loss for 'X'
-        # We're initially setting it to 1000 or -1000 as worse than the worst case:
+        # infinite  - loss for 'X'
 
-        value = 1000
+        value = sys.maxsize
         if max:
-            value = -1000
+            value = -sys.maxsize-1
         x = None
         y = None
         result = self.is_end()
 
         strat = self.player_1_strat if self.player_turn == 'X' else self.player_2_strat
 
-        if max_depth == 0:
+        if result == 'X':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
-            score = strat[1](self.player_turn, self.other_player_turn)
-            return (score, x, y)
-        elif result == 'X':
-            self.stats["depth_list"].append(
-                tuple([depth, 1]))
-            return (-1, x, y)
+            return (-sys.maxsize-1, x, y, depth)
         elif result == 'O':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
-            return (1, x, y)
+            return (sys.maxsize, x, y, depth)
         elif result == '.':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
-            return (0, x, y)
+            return (0, x, y, depth)
+        elif strat[0] == depth:
+            self.stats["depth_list"].append(
+                tuple([depth, 1]))
+            score = strat[1](self.player_turn, self.other_player_turn)
+            return (score, x, y, depth)
+
+        ard_list = []
+
         for i in range(0, self.n):
             for j in range(0, self.n):
                 if self.current_state[i][j] == '.':
                     if max:
                         self.current_state[i][j] = 'O'
-                        (v, _, _) = self.alphabeta(max_depth - 1, depth + 1,
-                                                   alpha, beta, max=False)
+                        (v, _, _, ard) = self.alphabeta(depth + 1,
+                                                        alpha, beta, max=False)
+                        ard_list.append(ard)
                         if v > value:
                             value = v
                             x = i
                             y = j
                     else:
                         self.current_state[i][j] = 'X'
-                        (v, _, _) = self.alphabeta(max_depth - 1, depth + 1,
-                                                   alpha, beta, max=True)
+                        (v, _, _, ard) = self.alphabeta(depth + 1,
+                                                        alpha, beta, max=True)
+                        ard_list.append(ard)
                         if v < value:
                             value = v
                             x = i
@@ -357,15 +367,15 @@ class Game:
                     self.current_state[i][j] = '.'
                     if max:
                         if value >= beta:
-                            return (value, x, y)
+                            return (value, x, y, depth)
                         if value > alpha:
                             alpha = value
                     else:
                         if value <= alpha:
-                            return (value, x, y)
+                            return (value, x, y, depth)
                         if value < beta:
                             beta = value
-        return (value, x, y)
+        return (value, x, y, np.average(np.array(ard_list)))
 
     def e1(self, player, other_player):
         """
@@ -485,18 +495,17 @@ class Game:
             start = time.time()
             if algo == self.MINIMAX:
                 if self.player_turn == 'X':
-                    (_, x, y) = self.minimax(self.player_1_strat[0], max=False)
+                    (_, x, y, ard) = self.minimax(max=False)
                 else:
-                    (_, x, y) = self.minimax(self.player_2_strat[0], max=True)
+                    (_, x, y, ard) = self.minimax(max=True)
             else:  # algo == self.ALPHABETA
                 if self.player_turn == 'X':
-                    (m, x, y) = self.alphabeta(
-                        self.player_1_strat[0], max=False)
+                    (m, x, y, ard) = self.alphabeta(max=False)
                 else:
-                    (m, x, y) = self.alphabeta(
-                        self.player_2_strat[0], max=True)
+                    (m, x, y, ard) = self.alphabeta(max=True)
+            self.stats["ard_list"].append(ard)
             end = time.time()
-            self.stats["eval_time"].append(round(end - start, 2))
+            self.stats["eval_time_list"].append(round(end - start, 2))
             if (self.player_turn == 'X' and player_x == self.HUMAN) or (self.player_turn == 'O' and player_o == self.HUMAN):
                 if self.recommend:
                     print(F'Evaluation time: {round(end - start, 7)}s')
@@ -515,7 +524,7 @@ class Game:
 def main():
     g = Game(recommend=True)
     g.play(algo=g.algo, player_x=g.player_1, player_o=g.player_2)
-    sys.stdout.close()
+    # sys.stdout.close()
     # g.play(algo=Game.MINIMAX,player_x=g.player_1,player_o=g.player_2)
 
 
