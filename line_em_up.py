@@ -2,6 +2,7 @@
 
 import numpy as np
 import time
+import sys
 
 class Game:
 	MINIMAX = 0
@@ -14,29 +15,85 @@ class Game:
 		self.recommend = recommend
 		
 	def initialize_game(self):
-		self.current_state = [['X','X','O','O','X'],
-							  ['O','X','.','X','.'],
-							  ['O','O','.','X','.'],
-							  ['.','O','X','O','.'],
-							  ['X','X','.','.','X']]
-		# Player X always plays first
-		self.player_turn = 'X'
+        
+		print('Select the size of the board:')
+		self.n = int(input('Enter a value from 3-10: '))
+		print('Select the winning line-up size: ')
+		self.s = int(input('Enter a value from 3-' + str(self.n) +': '))
+		print(F'Select the max depth of the adversarial search for player 1: ')
+		self.d1 = int(input('Enter a value : '))
+		print(F'Select the max depth of the adversarial search for player 2: ')
+		self.d2 = int(input('Enter a value : '))
+		print(F'Select the play mode: ')
+		mode_select = str(input('Enter h-h if both player 1 and 2 are human, h-ai if player 1 is human and player 2 is AI, ai-h if player 1 is AI and player 2 is human and ai-ai if both players are ai : '))
+		if mode_select == "h-h":
+			self.player_1 = Game.HUMAN
+			self.player_2 = Game.HUMAN
+		elif mode_select == "h-ai":
+			self.player_1 = Game.HUMAN
+			self.player_2 = Game.AI
+		elif mode_select == "ai-h":
+			self.player_1 = Game.AI
+			self.player_2 = Game.HUMAN
+		elif mode_select == "ai-ai":
+			self.player_1 = Game.AI
+			self.player_2 = Game.AI
+		if self.player_1 == Game.AI or self.player_2 == Game.AI:
+			print(F'Select whether minimax or alphabeta will be used: ')
+			self.a = str(input('Enter False for minimax and True for alphabeta : '))
+			if self.a == "True":
+				self.algo = Game.ALPHABETA
+			elif self.a == "False":
+				self.algo = Game.MINIMAX
+			print(F'Select the max allowed time for the program to return a move: ')
+			self.t = float(input('Enter an amount of seconds : '))
+		self.current_state = []
+		for i in range(self.n):
+			row = []
+			for j in range(self.n):
+				row.append('.')
+			self.current_state.append(row)
+		print(F'Select the number of blocks on the board:')
+		self.b = int(input('Enter a value : '))
+		if self.b != 0:
+			self.draw_board()
+		self.b_array = []
+		for i in range(self.b):
+			x = ord(str(input('Select the x coordinate for block ' + str(i) + '. Select a value between A and ' + str(chr(self.n+64)) + ': ' ))) - 65
+			y = (int(input('enter the y coordinate for block ' + str(i) + ' : ' )))
+			self.b_array.append(tuple([x,y]))
 		
-		self.n = 5
-		self.s = 4
+		for i in range(self.b):
+			x = self.b_array[i][0]
+			y = self.b_array[i][1]
+			self.current_state[x][y] = '*'
+
+		#  Player X always plays first
+
+		self.draw_board()
+		self.player_turn = 'X'
 
 	def draw_board(self):
 		print()
-		for y in range(0, 3):
-			for x in range(0, 3):
+		print("    ", end='')
+		for i in range(self.n):
+			print(chr(i+65), end='')
+		print()
+		print('  + ', end='')
+		for i in range(self.n):
+			print('-', end='')
+		print()
+		for y in range(0, self.n):
+			print(str(y) + ' | ', end='')
+			for x in range(0, self.n):
 				print(F'{self.current_state[x][y]}', end="")
 			print()
 		print()
 		
 	def is_valid(self, px, py):
-		if px < 0 or px > 2 or py < 0 or py > 2:
+		if px < 0 or px >= self.n or py < 0 or py >= self.n:
 			return False
-		elif self.current_state[px][py] != '.':
+		elif self.current_state[px][py] != '.' and self.current_state[px][py] != '*':
 			return False
 		else:
 			return True
@@ -89,7 +146,7 @@ class Game:
 	def input_move(self):
 		while True:
 			print(F'Player {self.player_turn}, enter your move:')
-			px = int(input('enter the x coordinate: '))
+			px = ord(str(input('enter the x coordinate: '))) - 65
 			py = int(input('enter the y coordinate: '))
 			if self.is_valid(px, py):
 				return (px,py)
@@ -110,6 +167,8 @@ class Game:
 		# 0  - a tie
 		# 1  - loss for 'X'
 		# We're initially setting it to 2 or -2 as worse than the worst case:
+		if time.time() >= self.time_start + self.t:
+			sys.exit("The AI took too longer than " + str(self.t) + " seconds so it automatically loses")
 		value = 2
 		if max:
 			value = -2
@@ -149,6 +208,8 @@ class Game:
 		# 0  - a tie
 		# 1  - loss for 'X'
 		# We're initially setting it to 2 or -2 as worse than the worst case:
+		if time.time() >= self.time_start + self.t:
+			sys.exit("The AI took too longer than " + str(self.t) + " seconds so it automatically loses")
 		value = 2
 		if max:
 			value = -2
@@ -299,6 +360,7 @@ class Game:
 			if self.check_end():
 				return
 			start = time.time()
+			self.time_start = time.time()
 			if algo == self.MINIMAX:
 				if self.player_turn == 'X':
 					(_, x, y) = self.minimax(max=False)
@@ -323,6 +385,8 @@ class Game:
 
 def main():
 	g = Game(recommend=True)
+	g.play(algo=g.algo,player_x=g.player_1,player_o=g.player_2)
+	g.play(algo=Game.MINIMAX,player_x=g.player_1,player_o=g.player_2)
 	# g.play(algo=Game.ALPHABETA,player_x=Game.AI,player_o=Game.AI)
 	# g.play(algo=Game.MINIMAX,player_x=Game.AI,player_o=Game.HUMAN)
 	print('e1: ')
