@@ -3,7 +3,7 @@
 import sys
 import numpy as np
 import time
-
+from random import randint
 
 class Game:
     MINIMAX = 0
@@ -11,11 +11,13 @@ class Game:
     HUMAN = 2
     AI = 3
 
-    def __init__(self, recommend=True):
-        self.initialize_game()
+    def __init__(self, recommend=False, user_input=True, fileOutput=False, n=0, b=0, s=0, t=0, d1=0, d2=0, a='True', blocs=None, strat1='e1'):
         self.recommend = recommend
+        self.fileOutput = fileOutput
+        self.user_input = user_input
+        self.initialize_game(n, b, s, t, d1, d2, a, blocs, strat1)
 
-    def initialize_game(self):
+    def initialize_game(self, n, b, s, t, d1, d2, a, blocs, strat1):
         # Initialize variables
         self.move = 0
         # X always starts
@@ -28,23 +30,93 @@ class Game:
             "total_depth_list": [],
             "eval_time_list": []
         }
-        self.display_inputs()
+        if self.user_input:
+            self.display_inputs()
+        else:
+            self.init_from_params(n, b, s, t, d1, d2, a, blocs, strat1)
+        
+        if self.a == "True":
+            self.algo = Game.ALPHABETA
+        elif self.a == "False":
+            self.algo = Game.MINIMAX
+
         self.current_player = self.player_1
 
-        # Uncomment line below when user wants to generate gametrace files
-        # sys.stdout = open(
-        #     F"gameTrace-{self.n}{self.b}{self.s}{self.t}.txt", "w")
+        if self.fileOutput:
+            sys.stdout = open(F"gameTrace-{self.n}{self.b}{self.s}{self.t}.txt", "w")
 
         # Display Initial Game info
         print(F'\nn={self.n} b={self.b} s={self.s} t={self.t}')
         print(F'blocs={self.b_array}')
         print(
-            F'\nPlayer 1: {self.player_1} d={self.player_1_strat[0]} a={self.current_player} e1(regular)')
+            F'\nPlayer 1: {self.player_1} d={self.player_1_strat[0]} a={self.a} e1(regular)')
         print(
-            F'Player 2: {self.player_2} d={self.player_2_strat[0]} a={self.current_player} e2(adjacent)')
+            F'Player 2: {self.player_2} d={self.player_2_strat[0]} a={self.a} e2(adjacent)')
 
         # Display Board
         self.draw_board()
+
+    def init_from_params(self, n, b, s, t, d1, d2, a, blocs, strat1):
+        self.n = n
+        self.b = b
+        self.s = s
+        self.t = t
+        self.a = a
+
+        self.player_1 = "AI"
+        self.player_2 = "AI"
+        
+        if (strat1 == 'e1'):
+            self.player_1_strat = tuple([d1, self.e1])
+            self.player_2_strat = tuple([d2, self.e2])
+        else:
+            self.player_1_strat = tuple([d1, self.e2])
+            self.player_2_strat = tuple([d2, self.e1])
+
+        self.current_state = []
+        for i in range(self.n):
+            row = []
+            for j in range(self.n):
+                row.append('.')
+            self.current_state.append(row)
+
+        self.b_array = []
+        
+        if blocs != None:
+            for bloc in blocs:
+                self.current_state[bloc[0], bloc[1]]
+        else:
+            valid_positions = self.find_all_valid_positions()
+            for _ in range(self.b):
+                bloc_position = self.find_random_valid_position(valid_positions)
+                self.b_array.append(tuple([bloc_position[0],bloc_position[1]]))
+                del valid_positions[bloc_position[2]]
+
+        for bloc in self.b_array:
+            self.current_state[bloc[0]][bloc[1]] = '*'
+
+    def find_all_valid_positions(self):
+        valid_spots = []
+        for i in range(self.n):
+            for j in range(self.n):
+                if self.current_state[i][j] == '.':
+                    valid_spots.append(([i,j]))
+
+        return valid_spots
+    
+    def find_random_valid_position(self,lst=None):
+        if lst != None:
+            valid_spots = lst
+        else:    
+            valid_spots = []
+            for i in range(self.n):
+                for j in range(self.n):
+                    if self.current_state[i][j] == '.':
+                        valid_spots.append((i,j))
+
+        random_int = randint(0, len(valid_spots)-1)
+        random_position = valid_spots[random_int]
+        return (random_position[0], random_position[1], random_int)
 
     def draw_end_game_stats(self):
         print(
@@ -124,12 +196,8 @@ class Game:
         print(F'Step 6) Select whether minimax or alphabeta will be used.')
         self.a = str(
             input(' \tEnter (False) for minimax and (True) for alphabeta : '))
-        if self.a == "True":
-            self.algo = Game.ALPHABETA
-        elif self.a == "False":
-            self.algo = Game.MINIMAX
         print(F'Step 7) Select the max allowed time for the program to return a move.')
-        self.t = float(input(' \tEnter an amount of seconds : '))
+        self.t = int(input(' \tEnter an amount of seconds : '))
         self.current_state = []
         for i in range(self.n):
             row = []
@@ -276,11 +344,11 @@ class Game:
         if result == 'X':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
-            return (-sys.maxsize - 1, x, y, depth)
+            return ((-sys.maxsize-1)/2, x, y, depth)
         elif result == 'O':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
-            return (sys.maxsize, x, y, depth)
+            return (sys.maxsize/2, x, y, depth)
         elif result == '.':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
@@ -342,11 +410,11 @@ class Game:
         if result == 'X':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
-            return (-sys.maxsize-1, x, y, depth)
+            return ((-sys.maxsize-1)/2, x, y, depth)
         elif result == 'O':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
-            return (sys.maxsize, x, y, depth)
+            return (sys.maxsize/2, x, y, depth)
         elif result == '.':
             self.stats["depth_list"].append(
                 tuple([depth, 1]))
@@ -534,16 +602,15 @@ class Game:
             self.draw_board()
             if self.check_end():
                 self.draw_end_game_stats()
+                if self.fileOutput:
+                    sys.stdout.close()
                 return
             self.switch_player()
 
 
 def main():
-    g = Game(recommend=True)
+    g = Game(recommend=True, user_input=True, fileOutput=True, n=5, b=3, s=4, t=30, d1=3, d2=4, a='True', blocs=None, strat1='e2')
     g.play(algo=g.algo, player_x=g.player_1, player_o=g.player_2)
-    # Uncomment line below when user wants to generate gametrace files
-    # sys.stdout.close()
-
 
 if __name__ == "__main__":
     main()
