@@ -16,6 +16,7 @@ class Game:
         self.recommend = recommend
 
     def initialize_game(self):
+        # Initialize variables
         self.move = 0
         # X always starts
         self.player_turn = 'X'
@@ -29,8 +30,12 @@ class Game:
         }
         self.display_inputs()
         self.current_player = self.player_1
+
+        # Uncomment line below when user wants to generate gametrace files
+        # sys.stdout = open(
+        #     F"gameTrace-{self.n}{self.b}{self.s}{self.t}.txt", "w")
+
         # Display Initial Game info
-        # sys.stdout = open("output.txt", "w")
         print(F'\nn={self.n} b={self.b} s={self.s} t={self.t}')
         print(F'blocs={self.b_array}')
         print(
@@ -53,10 +58,9 @@ class Game:
             print(str(round(info[0])) +
                   ": " + str(round(info[1]))+", ", end="")
         print("}")
-        print(
-            F'6(b)iv  Average evaluation depth: {round(np.average(np.array(self.stats["total_depth_list"])[:,0]),2)}')
 
-        # self.calculate_ARD(np.array(self.stats["total_depth_list"])[:, 0])
+        print(
+            F'6(b)iv  Average evaluation depth: {round(np.average(total_depth_list[:,0], weights=total_depth_list[:,1]),2)}')
 
         print(
             F'6(b)v   Average recursion depth evaluations: {round(np.average(np.array(self.stats["ard_list"])),2)}')
@@ -379,12 +383,12 @@ class Game:
                     self.current_state[i][j] = '.'
                     if max:
                         if value >= beta:
-                            return (value, x, y, depth)
+                            return (value, x, y, np.average(np.array(ard_list)))
                         if value > alpha:
                             alpha = value
                     else:
                         if value <= alpha:
-                            return (value, x, y, depth)
+                            return (value, x, y, np.average(np.array(ard_list)))
                         if value < beta:
                             beta = value
         return (value, x, y, np.average(np.array(ard_list)))
@@ -537,6 +541,7 @@ class Game:
 def main():
     g = Game(recommend=True)
     g.play(algo=g.algo, player_x=g.player_1, player_o=g.player_2)
+    # Uncomment line below when user wants to generate gametrace files
     # sys.stdout.close()
 
 
