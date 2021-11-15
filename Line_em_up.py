@@ -41,7 +41,7 @@ class Game:
         print(
             F'\nPlayer 1: {self.player_1} d={self.player_1_strat[0]} a={self.current_player} e1(regular)')
         print(
-            F'Player 2: {self.player_2} d={self.player_2_strat[0]} a={self.current_player} e2(defensive)')
+            F'Player 2: {self.player_2} d={self.player_2_strat[0]} a={self.current_player} e2(adjacent)')
 
         # Display Board
         self.draw_board()
