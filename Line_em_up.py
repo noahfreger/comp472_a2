@@ -17,64 +17,7 @@ class Game:
 
     def initialize_game(self):
         self.move = 0
-
-        # Get inputs from human
-        print('Select the size of the board:')
-        self.n = int(input('Enter a value from 3-10: '))
-        print('Select the winning line-up size: ')
-        self.s = int(input('Enter a value from 3-' + str(self.n) + ': '))
-        print(F'Select the max depth of the adversarial search for player 1: ')
-        d1 = int(input('Enter a value : '))
-        self.player_1_strat = tuple([d1, self.e1])
-        print(F'Select the max depth of the adversarial search for player 2: ')
-        d2 = int(input('Enter a value : '))
-        self.player_2_strat = tuple([d2, self.e2])
-
-        print(F'Select the max allowed time for the program to return a move: ')
-        self.t = int(input('Enter an amount of seconds : '))
-        print(F'Select whether minimax or alphabeta will be used: ')
-        self.a = input('Enter False for minimax and True for alphabeta : ')
-        if self.a == "True":
-            self.algo = Game.ALPHABETA
-        elif self.a == "False":
-            self.algo = Game.MINIMAX
-        print(F'Select the play mode: ')
-        mode_select = str(input(
-            'Enter h-h if both player 1 and 2 are human, h-ai if player 1 is human and player 2 is AI, ai-h if player 1 is AI and player 2 is human and ai-ai if both players are ai : '))
-        if mode_select == "h-h":
-            self.player_1 = "HUMAN"
-            self.player_2 = "HUMAN"
-        elif mode_select == "h-ai":
-            self.player_1 = "HUMAN"
-            self.player_2 = "AI"
-        elif mode_select == "ai-h":
-            self.player_1 = "AI"
-            self.player_2 = "HUMAN"
-        elif mode_select == "ai-ai":
-            self.player_1 = "AI"
-            self.player_2 = "AI"
-        print(F'Select the number of blocks on the board:')
-        # Get Coordinate and Number of blocks for board
-        self.b = int(input('Enter a value : '))
-        self.b_array = []
-        for i in range(self.b):
-            x = ord(
-                str(input('enter the x coordinate for block ' + str(i) + ' : '))) - 65
-            y = (int(input('enter the y coordinate for block ' + str(i) + ' : ')))
-            self.b_array.append(tuple([x, y]))
-        self.current_state = []
-        # Build game board with blocks
-        for i in range(self.n):
-            row = []
-            for j in range(self.n):
-                row.append('.')
-            self.current_state.append(row)
-        for i in range(self.b):
-            x = self.b_array[i][0]
-            y = self.b_array[i][1]
-            self.current_state[x][y] = '*'
         # X always starts
-        self.current_player = self.player_1
         self.player_turn = 'X'
         self.other_player_turn = 'O'
         self.stats = {
@@ -84,6 +27,8 @@ class Game:
             "total_depth_list": [],
             "eval_time_list": []
         }
+        self.display_inputs()
+        self.current_player = self.player_1
         # Display Initial Game info
         # sys.stdout = open("output.txt", "w")
         print(F'\nn={self.n} b={self.b} s={self.s} t={self.t}')
@@ -139,15 +84,74 @@ class Game:
         print(
             F'iv  Average evaluation depth: {round(np.average(np.array(self.stats["depth_list"])[:,0]),2)}')
         print(
-            F'v   Average recursion depth evaluations: {self.stats["ard_list"][self.move - 1]}')
+            F'v   Average recursion depth evaluations: {round(self.stats["ard_list"][self.move - 1],2)}')
 
     def group_by_sum(self, list):
         u, idx = np.unique(list[:, 0], return_inverse=True)
         s = np.bincount(idx, weights=list[:, 1])
         return np.c_[u, s]
 
-    def calculate_ARD(self, list):
-        print()
+    def display_inputs(self):
+        print('Step 1) Select the size of the board.')
+        self.n = int(input(' \tEnter a value from (3-10): '))
+        print('Step 2) Select the winning line-up size.')
+        self.s = int(input(' \tEnter a value from (3-' + str(self.n) + '): '))
+        print(F'Step 3) Select the max depth of the adversarial search for player 1.')
+        d1 = int(input(' \tEnter a value : '))
+        self.player_1_strat = tuple([d1, self.e1])
+        print(F'Step 4) Select the max depth of the adversarial search for player 2.')
+        d2 = int(input(' \tEnter a value : '))
+        self.player_2_strat = tuple([d2, self.e2])
+        print(F'Step 5) Select the play mode.')
+        mode_select = str(input(
+            ' \tEnter (h-h) if both player 1 and 2 are human, \n \tenter (h-ai) if player 1 is human and player 2 is AI, \n \tenter (ai-h) if player 1 is AI and player 2 is human and \n \tenter (ai-ai) if both players are ai : '))
+        if mode_select == "h-h":
+            self.player_1 = "HUMAN"
+            self.player_2 = "HUMAN"
+        elif mode_select == "h-ai":
+            self.player_1 = "HUMAN"
+            self.player_2 = "AI"
+        elif mode_select == "ai-h":
+            self.player_1 = "AI"
+            self.player_2 = "HUMAN"
+        elif mode_select == "ai-ai":
+            self.player_1 = "AI"
+            self.player_2 = "AI"
+        print(F'Step 6) Select whether minimax or alphabeta will be used.')
+        self.a = str(
+            input(' \tEnter (False) for minimax and (True) for alphabeta : '))
+        if self.a == "True":
+            self.algo = Game.ALPHABETA
+        elif self.a == "False":
+            self.algo = Game.MINIMAX
+        print(F'Step 7) Select the max allowed time for the program to return a move.')
+        self.t = float(input(' \tEnter an amount of seconds : '))
+        self.current_state = []
+        for i in range(self.n):
+            row = []
+            for j in range(self.n):
+                row.append('.')
+            self.current_state.append(row)
+        print(F'Step 8) Select the number of blocks on the board.')
+        self.b = int(input(' \tEnter a value : '))
+        if self.b != 0:
+            self.draw_board()
+        self.b_array = []
+        for i in range(self.b):
+            x = ord(str(input('Select the x coordinate for block ' + str(i) +
+                    '. Select a value between A and ' + str(chr(self.n+64)) + ': '))) - 65
+            y = (int(input('enter the y coordinate for block ' + str(i) + ' : ')))
+            self.b_array.append(tuple([x, y]))
+
+        for i in range(self.b):
+            x = self.b_array[i][0]
+            y = self.b_array[i][1]
+            self.current_state[x][y] = '*'
+
+        #  Player X always plays first
+
+        self.draw_board()
+        self.player_turn = 'X'
 
     def draw_board(self):
         print("\n    ", end='')
@@ -227,7 +231,7 @@ class Game:
     def input_move(self):
         while True:
             print(F'Player {self.player_turn}, enter your move:')
-            px = int(input('enter the x coordinate: '))
+            px = ord(str(input('enter the x coordinate: '))) - 65
             py = int(input('enter the y coordinate: '))
             if self.is_valid(px, py):
                 return (px, py)
@@ -252,6 +256,10 @@ class Game:
         # 0  - a tie
         # 1  - loss for 'X'
         # We're initially setting it to 2 or -2 as worse than the worst case:
+        if time.time() >= self.time_start + self.t:
+            sys.exit("The AI took too longer than " + str(self.t) +
+                     " seconds so it automatically loses")
+
         value = sys.maxsize
         if max:
             value = -sys.maxsize - 1
@@ -313,6 +321,10 @@ class Game:
         # -infinite - win for 'X'
         # 0  - a tie
         # infinite  - loss for 'X'
+
+        if time.time() >= self.time_start + self.t:
+            sys.exit("The AI took longer than " + str(self.t) +
+                     " seconds so it automatically loses")
 
         value = sys.maxsize
         if max:
@@ -487,12 +499,13 @@ class Game:
         if algo == None:
             algo = self.ALPHABETA
         if player_x == None:
-            player_x = self.HUMAN
+            player_x = "HUMAN"
         if player_o == None:
-            player_o = self.HUMAN
+            player_o = "HUMAN"
         while True:
             self.stats["depth_list"] = []
             start = time.time()
+            self.time_start = time.time()
             if algo == self.MINIMAX:
                 if self.player_turn == 'X':
                     (_, x, y, ard) = self.minimax(max=False)
@@ -506,7 +519,7 @@ class Game:
             self.stats["ard_list"].append(ard)
             end = time.time()
             self.stats["eval_time_list"].append(round(end - start, 2))
-            if (self.player_turn == 'X' and player_x == self.HUMAN) or (self.player_turn == 'O' and player_o == self.HUMAN):
+            if (self.player_turn == 'X' and player_x == "HUMAN") or (self.player_turn == 'O' and player_o == "HUMAN"):
                 if self.recommend:
                     print(F'Evaluation time: {round(end - start, 7)}s')
                     print(F'Recommended move: x = {x}, y = {y}')
@@ -525,7 +538,6 @@ def main():
     g = Game(recommend=True)
     g.play(algo=g.algo, player_x=g.player_1, player_o=g.player_2)
     # sys.stdout.close()
-    # g.play(algo=Game.MINIMAX,player_x=g.player_1,player_o=g.player_2)
 
 
 if __name__ == "__main__":
