@@ -1,0 +1,132 @@
+
+n=4 b=4 s=3 t=5
+blocs=[(0, 0), (0, 3), (3, 0), (3, 3)]
+
+Player 1: AI d=6 a=False e2(adjacent)
+Player 2: AI d=6 a=False e1(regular)
+
+    ABCD
+  + ----
+0 | *..*
+1 | ....
+2 | ....
+3 | *..*
+
+*** Out of extra time at depth 6 ***
+Player X under AI control plays: B2
+
+i   Evaluation time: 4.974076s
+ii  Heuristic evaluations: 2883
+iii Evaluations by depth: {5: 24, 6: 2859}
+iv  Average evaluation depth: 5.99
+v   Average recursion depth evaluations: 0
+
+    ABCD    (move #1)
+  + ----
+0 | *..*
+1 | ....
+2 | .X..
+3 | *..*
+
+*** Out of extra time at depth 4 ***
+Player O under AI control plays: D2
+
+i   Evaluation time: 4.9700611s
+ii  Heuristic evaluations: 9715
+iii Evaluations by depth: {5: 31, 6: 9684}
+iv  Average evaluation depth: 6.0
+v   Average recursion depth evaluations: 0
+
+    ABCD    (move #2)
+  + ----
+0 | *..*
+1 | ....
+2 | .X.O
+3 | *..*
+
+*** Out of extra time at depth 6 ***
+Player X under AI control plays: C1
+
+i   Evaluation time: 4.9749188s
+ii  Heuristic evaluations: 2793
+iii Evaluations by depth: {3: 2, 5: 179, 6: 2612}
+iv  Average evaluation depth: 5.93
+v   Average recursion depth evaluations: 0
+
+    ABCD    (move #3)
+  + ----
+0 | *..*
+1 | ..X.
+2 | .X.O
+3 | *..*
+
+*** Out of extra time at depth 5 ***
+Player O under AI control plays: B1
+
+i   Evaluation time: 4.9701281s
+ii  Heuristic evaluations: 9886
+iii Evaluations by depth: {5: 30, 6: 9856}
+iv  Average evaluation depth: 6.0
+v   Average recursion depth evaluations: 0
+
+    ABCD    (move #4)
+  + ----
+0 | *..*
+1 | .OX.
+2 | .X.O
+3 | *..*
+
+*** Out of extra time at depth 5 ***
+Player X under AI control plays: C0
+
+i   Evaluation time: 4.9710119s
+ii  Heuristic evaluations: 2919
+iii Evaluations by depth: {3: 10, 5: 308, 6: 2601}
+iv  Average evaluation depth: 5.88
+v   Average recursion depth evaluations: 0
+
+    ABCD    (move #5)
+  + ----
+0 | *.X*
+1 | .OX.
+2 | .X.O
+3 | *..*
+
+Player O under AI control plays: A1
+
+i   Evaluation time: 3.5970011s
+ii  Heuristic evaluations: 4968
+iii Evaluations by depth: {5: 72, 6: 4896}
+iv  Average evaluation depth: 5.99
+v   Average recursion depth evaluations: 5.97
+
+    ABCD    (move #6)
+  + ----
+0 | *.X*
+1 | OOX.
+2 | .X.O
+3 | *..*
+
+Player X under AI control plays: C2
+
+i   Evaluation time: 0.546999s
+ii  Heuristic evaluations: 521
+iii Evaluations by depth: {1: 1, 3: 16, 5: 90, 6: 414}
+iv  Average evaluation depth: 5.73
+v   Average recursion depth evaluations: 4.64
+
+    ABCD    (move #7)
+  + ----
+0 | *.X*
+1 | OOX.
+2 | .XXO
+3 | *..*
+
+The winner is X!
+
+6(b)i   Average evaluation time: 4.14s
+6(b)ii  Total heuristic evaluations: 33685
+6(b)iii Total evaluations by depth: {1: 1, 3: 28, 5: 734, 6: 32922}
+6(b)iv  Average evaluation depth: 5.98
+6(b)v   Average recursion depth evaluations: 1.52
+6(b)vi  Total moves: 7

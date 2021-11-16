@@ -1,76 +1,152 @@
 -----------------------------------------------
 
-n=3 b=3 s=3 t=50
+n=4 b=4 s=3 t=5
 
-Player 1: d=3 a=True e1(regular)
-Player 1: d=3 a=True e2(adjacent)
+Player 1: d=6 a=False e1(regular)
+Player 2: d=6 a=False e2(adjacent)
 
 10 games
 
-Total wins for heuristic e1: 1 (10.0%)
-Total wins for heuristic e2: 2 (20.0%)
+Total wins for heuristic e1: 5 (50.0%)
+Total wins for heuristic e2: 5 (50.0%)
 
-i   Average evaluation time: 0.02s
-ii  Total heuristic evaluations: 964
-iii Total evaluations by depth: {1: 10, 2: 17, 3: 937}
-iv  Average evaluation depth: 2.96
-iv  Average recursion depth: 2.56
-vi  Average moves per game: 5.7
+i   Average evaluation time: 3.7s
+ii  Total heuristic evaluations: 390545
+iii Total evaluations by depth: {1: 34, 3: 1100, 4: 4, 5: 20775, 6: 368632}
+iv  Average evaluation depth: 5.94
+v   Average recursion depth: 1.19
+vi  Average moves per game: 8.0
 
 -----------------------------------------------
 
-n=3 b=3 s=3 t=50
+n=4 b=4 s=3 t=1
 
-Player 1: d=3 a=True e1(regular)
-Player 1: d=3 a=True e2(adjacent)
-
-10 games
-
-Total wins for heuristic e1: 2 (20.0%)
-Total wins for heuristic e2: 2 (20.0%)
-
-i   Average evaluation time: 0.02s
-ii  Total heuristic evaluations: 965
-iii Total evaluations by depth: {1: 10, 2: 16, 3: 939}
-iv  Average evaluation depth: 2.96
-iv  Average recursion depth: 2.58
-vi  Average moves per game: 5.6
-
------------------------------------------------
-
-n=3 b=3 s=3 t=50
-
-Player 1: d=3 a=True e1(regular)
-Player 1: d=3 a=True e2(adjacent)
+Player 1: d=6 a=True e1(regular)
+Player 2: d=6 a=True e2(adjacent)
 
 10 games
 
-Total wins for heuristic e1: 1 (10.0%)
+Total wins for heuristic e1: 7 (70.0%)
 Total wins for heuristic e2: 3 (30.0%)
 
-i   Average evaluation time: 0.02s
-ii  Total heuristic evaluations: 972
-iii Total evaluations by depth: {1: 10, 2: 16, 3: 946}
-iv  Average evaluation depth: 2.96
-v   Average recursion depth: 2.58
-vi  Average moves per game: 5.6
+i   Average evaluation time: 0.63s
+ii  Total heuristic evaluations: 43915
+iii Total evaluations by depth: {1: 32, 3: 330, 4: 4, 5: 5376, 6: 38173}
+iv  Average evaluation depth: 5.85
+v   Average recursion depth: 2.16
+vi  Average moves per game: 7.4
 
 -----------------------------------------------
 
-n=3 b=3 s=3 t=50
+n=5 b=4 s=4 t=1
 
-Player 1: d=3 a=True e1(regular)
-Player 1: d=3 a=True e2(adjacent)
+Player 1: d=2 a=True e1(regular)
+Player 2: d=6 a=True e2(adjacent)
 
 10 games
 
-Total wins for heuristic e1: 2 (20.0%)
-Total wins for heuristic e2: 2 (20.0%)
+Total wins for heuristic e1: 9 (90.0%)
+Total wins for heuristic e2: 1 (10.0%)
 
-i   Average evaluation time: 0.02s
-ii  Total heuristic evaluations: 852
-iii Total evaluations by depth: {1: 10, 2: 16, 3: 826}
-iv  Average evaluation depth: 2.96
-v   Average recursion depth: 2.58
-vi  Average moves per game: 5.6
+i   Average evaluation time: 0.46s
+ii  Total heuristic evaluations: 20332
+iii Total evaluations by depth: {1: 13, 2: 1359, 3: 19, 4: 10, 5: 210, 6: 18721}
+iv  Average evaluation depth: 5.71
+v   Average recursion depth: 1.14
+vi  Average moves per game: 9.6
+
+-----------------------------------------------
+
+n=5 b=4 s=4 t=5
+
+Player 1: d=6 a=True e1(regular)
+Player 2: d=6 a=True e2(adjacent)
+
+10 games
+
+Total wins for heuristic e1: 4 (40.0%)
+Total wins for heuristic e2: 4 (40.0%)
+
+i   Average evaluation time: 3.78s
+ii  Total heuristic evaluations: 366828
+iii Total evaluations by depth: {1: 19, 2: 4, 3: 353, 4: 22, 5: 10269, 6: 356161}
+iv  Average evaluation depth: 5.97
+v   Average recursion depth: 1.68
+vi  Average moves per game: 15.8
+
+-----------------------------------------------
+
+n=8 b=5 s=5 t=1
+
+Player 1: d=2 a=True e1(regular)
+Player 2: d=6 a=True e2(adjacent)
+
+10 games
+
+Total wins for heuristic e1: 10 (100.0%)
+Total wins for heuristic e2: 0 (0.0%)
+
+i   Average evaluation time: 0.57s
+ii  Total heuristic evaluations: 19120
+iii Total evaluations by depth: {1: 10, 2: 6751, 6: 12359}
+iv  Average evaluation depth: 4.55
+v   Average recursion depth: 1.04
+vi  Average moves per game: 13.9
+
+-----------------------------------------------
+
+n=8 b=5 s=5 t=5
+
+Player 1: d=2 a=True e1(regular)
+Player 2: d=6 a=True e2(adjacent)
+
+10 games
+
+Total wins for heuristic e1: 9 (90.0%)
+Total wins for heuristic e2: 1 (10.0%)
+
+i   Average evaluation time: 2.47s
+ii  Total heuristic evaluations: 72578
+iii Total evaluations by depth: {1: 22, 2: 7006, 3: 181, 5: 1599, 6: 63770}
+iv  Average evaluation depth: 5.54
+v   Average recursion depth: 1.07
+vi  Average moves per game: 16.2
+
+-----------------------------------------------
+
+n=8 b=6 s=5 t=1
+
+Player 1: d=6 a=True e1(regular)
+Player 1: d=6 a=True e2(adjacent)
+
+10 games
+
+Total wins for heuristic e1: 6 (60.0%)
+Total wins for heuristic e2: 3 (30.0%)
+
+i   Average evaluation time: 0.96s
+ii  Total heuristic evaluations: 188058
+iii Total evaluations by depth: {1: 5, 2: 3, 3: 52, 4: 20, 5: 1645, 6: 186333}
+iv  Average evaluation depth: 5.99
+v   Average recursion depth: 0.1
+vi  Average moves per game: 44.0
+
+-----------------------------------------------
+
+n=8 b=6 s=5 t=5
+
+Player 1: d=6 a=True e1(regular)
+Player 2: d=6 a=True e2(adjacent)
+
+10 games
+
+Total wins for heuristic e1: 1 (10.0%)
+Total wins for heuristic e2: 7 (70.0%)
+
+i   Average evaluation time: 4.8s
+ii  Total heuristic evaluations: 541362
+iii Total evaluations by depth: {1: 8, 2: 4, 3: 137, 4: 18, 5: 7082, 6: 534113}
+iv  Average evaluation depth: 5.99
+v   Average recursion depth: 0.21
+vi  Average moves per game: 47.0
 
