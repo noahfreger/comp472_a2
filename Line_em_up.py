@@ -583,42 +583,44 @@ class Game:
         if player_o == None:
             player_o = "HUMAN"
         while True:
-            # make deep copy of board
-            self.save_board2 = copy.deepcopy(self.current_state)
-            self.timer = Timer(self.t, self.no_time_left)
-            self.timer.start()
-            self.stats["depth_list"] = []
-            start = time.time()
-            try:
-                if algo == self.MINIMAX:
-                    if self.player_turn == 'X':
-                        (_, x, y, ard) = self.minimax(max=False)
-                    else:
-                        (_, x, y, ard) = self.minimax(max=True)
-                else:  # algo == self.ALPHABETA
-                    if self.player_turn == 'X':
-                        (m, x, y, ard) = self.alphabeta(max=False)
-                    else:
-                        (m, x, y, ard) = self.alphabeta(max=True)
-
-            except Exception as e:
-                print(
-                    F"*** Out of extra time at depth {str(e)} ***")
-                ard = 0
-                # make deep copy of board
-                self.current_state = copy.deepcopy(self.save_board2)
-                (x, y, _) = self.find_random_valid_position()
-
-            self.stats["ard_list"].append(ard)
-            end = time.time()
-            self.stats["eval_time_list"].append(round(end - start, 2))
             if (self.player_turn == 'X' and player_x == "HUMAN") or (self.player_turn == 'O' and player_o == "HUMAN"):
-                if self.recommend:
-                    print(F'Evaluation time: {round(end - start, 7)}s')
-                    print(F'Recommended move: x = {x}, y = {y}')
                 (x, y) = self.input_move()
+                self.stats["eval_time_list"].append(0)
+            else:
+                # make deep copy of board
+                self.save_board = copy.deepcopy(self.current_state)
+                self.timer = Timer(self.t - 0.01, self.no_time_left)
+                self.timer.start()
+                self.stats["depth_list"] = []
+                start = time.time()
+                try:
+                    if algo == self.MINIMAX:
+                        if self.player_turn == 'X':
+                            (_, x, y, ard) = self.minimax(max=False)
+                        else:
+                            (_, x, y, ard) = self.minimax(max=True)
+                    else:  # algo == self.ALPHABETA
+                        if self.player_turn == 'X':
+                            (m, x, y, ard) = self.alphabeta(max=False)
+                        else:
+                            (m, x, y, ard) = self.alphabeta(max=True)
+                    end = time.time()
+                except Exception as e:
+                    (x, y, _) = self.find_random_valid_position()
+                    end = time.time()
+                    print(F"*** Out of extra time at depth {str(e)} ***")
+                    ard = 0
+                    # make deep copy of board
+                    self.current_state = copy.deepcopy(self.save_board)
+
+                self.stats["ard_list"].append(ard)
+
+                self.stats["eval_time_list"].append(round(end - start, 7))
+                self.draw_turn_stats(x, y)
+                self.timer.cancel()
+                self.stop_timer_event.clear()
+
             self.move += 1
-            self.draw_turn_stats(x, y)
             self.current_state[x][y] = self.player_turn
             self.draw_board()
             if self.check_end():
@@ -627,8 +629,6 @@ class Game:
                     sys.stdout.close()
                 return
             self.switch_player()
-            self.timer.cancel()
-            self.stop_timer_event.clear()
 
 
 def main():
