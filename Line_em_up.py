@@ -2,6 +2,9 @@ import sys
 import numpy as np
 import time
 from random import randint
+from threading import Event, Timer
+import copy
+
 
 class Game:
     MINIMAX = 0
@@ -9,15 +12,17 @@ class Game:
     HUMAN = 2
     AI = 3
 
-    def __init__(self, recommend=False, user_input=True, gameTrace=False, n=0, b=0, s=0, t=0, d1=0, d2=0, a='True', blocs=None, strat1='e1'):
-        self.recommend = recommend
+    def __init__(self, user_input=True, gameTrace=False, n=0, b=0, s=0, t=0, d1=0, d2=0, a='True', blocs=None, strat1='e1'):
         self.gameTrace = gameTrace
         self.user_input = user_input
         self.initialize_game(n, b, s, t, d1, d2, a, blocs, strat1)
+        self.stop_timer_event = Event()
 
     def initialize_game(self, n, b, s, t, d1, d2, a, blocs, strat1):
         # Initialize variables
         self.move = 0
+        self.ai_move = 0
+        self.current_depth = 0
         # X always starts
         self.player_turn = 'X'
         self.other_player_turn = 'O'
@@ -34,7 +39,7 @@ class Game:
             self.display_inputs()
         else:
             self.init_from_params(n, b, s, t, d1, d2, a, blocs, strat1)
-        
+
         if self.a == "True":
             self.algo = Game.ALPHABETA
         elif self.a == "False":
@@ -43,7 +48,8 @@ class Game:
         self.current_player = self.player_1
 
         if self.gameTrace:
-            sys.stdout = open(F"gameTrace-{self.n}{self.b}{self.s}{self.t}.txt", "w")
+            sys.stdout = open(
+                F"gameTrace-{self.n}{self.b}{self.s}{self.t}.txt", "w")
 
         # Display Initial Game info
         print(F'\nn={self.n} b={self.b} s={self.s} t={self.t}')
@@ -65,7 +71,7 @@ class Game:
 
         self.player_1 = "AI"
         self.player_2 = "AI"
-        
+
         if (strat1 == 'e1'):
             self.player_1_strat = tuple([d1, self.e1])
             self.player_2_strat = tuple([d2, self.e2])
@@ -81,15 +87,17 @@ class Game:
             self.current_state.append(row)
 
         self.b_array = []
-        
+
         if blocs != None:
             for bloc in blocs:
                 self.current_state[bloc[0]][bloc[1]]
         else:
             valid_positions = self.find_all_valid_positions()
             for _ in range(self.b):
-                bloc_position = self.find_random_valid_position(valid_positions)
-                self.b_array.append(tuple([bloc_position[0],bloc_position[1]]))
+                bloc_position = self.find_random_valid_position(
+                    valid_positions)
+                self.b_array.append(
+                    tuple([bloc_position[0], bloc_position[1]]))
                 del valid_positions[bloc_position[2]]
 
         for bloc in self.b_array:
@@ -100,41 +108,46 @@ class Game:
         for i in range(self.n):
             for j in range(self.n):
                 if self.current_state[i][j] == '.':
-                    valid_spots.append(([i,j]))
+                    valid_spots.append(([i, j]))
 
         return valid_spots
-    
-    def find_random_valid_position(self,lst=None):
+
+    def find_random_valid_position(self, lst=None):
         if lst != None:
             valid_spots = lst
-        else:    
+        else:
             valid_spots = []
             for i in range(self.n):
                 for j in range(self.n):
                     if self.current_state[i][j] == '.':
-                        valid_spots.append((i,j))
+                        valid_spots.append((i, j))
 
         random_int = randint(0, len(valid_spots)-1)
         random_position = valid_spots[random_int]
         return (random_position[0], random_position[1], random_int)
 
     def draw_end_game_stats(self):
-        self.stats["average_eval_time"] = round(np.average(np.array(self.stats["eval_time_list"])),2)
+        self.stats["average_eval_time"] = round(
+            np.average(np.array(self.stats["eval_time_list"])), 2)
         print(
             F'\n6(b)i   Average evaluation time: {self.stats["average_eval_time"]}s')
         print(
             F'6(b)ii  Total heuristic evaluations: {self.stats["total_heuristic_count"]}')
         print("6(b)iii Total evaluations by depth: {", end='')
-        total_depth_list = self.group_by_sum(np.array(self.stats["total_depth_list"]))
-        for index,info in enumerate(total_depth_list):
-            print(str(round(info[0])) + ": " + str(round(info[1])) + (", " if index < len(total_depth_list) -1 else ""), end="")
+        total_depth_list = self.group_by_sum(
+            np.array(self.stats["total_depth_list"]))
+        for index, info in enumerate(total_depth_list):
+            print(str(round(info[0])) + ": " + str(round(info[1])) +
+                  (", " if index < len(total_depth_list) - 1 else ""), end="")
         print("}")
 
-        self.stats["average_evaluation_depth"] = round(np.average(total_depth_list[:,0], weights=total_depth_list[:,1]),2)
+        self.stats["average_evaluation_depth"] = round(np.average(
+            total_depth_list[:, 0], weights=total_depth_list[:, 1]), 2)
         print(
             F'6(b)iv  Average evaluation depth: {self.stats["average_evaluation_depth"]}')
 
-        self.stats["average_recursion_depth"] = round(np.average(np.array(self.stats["ard_list"])),2)
+        self.stats["average_recursion_depth"] = round(
+            np.average(np.array(self.stats["ard_list"])), 2)
         print(
             F'6(b)v   Average recursion depth evaluations: {self.stats["average_recursion_depth"]}')
         print(
@@ -144,7 +157,7 @@ class Game:
         print(
             F'Player {self.player_turn} under {self.current_player} control plays: {chr(x+65)}{y}')
         print(
-            F'\ni   Evaluation time: {self.stats["eval_time_list"][self.move - 1]}s')
+            F'\ni   Evaluation time: {self.stats["eval_time_list"][self.ai_move - 1]}s')
 
         heuristic_turn_count = np.sum(np.array(self.stats["depth_list"])[:, 1])
         self.stats["total_heuristic_count"] += heuristic_turn_count
@@ -153,20 +166,24 @@ class Game:
         print("iii Evaluations by depth: {", end='')
         depth_list = self.group_by_sum(np.array(self.stats["depth_list"]))
 
-        for index,info in enumerate(depth_list):
+        for index, info in enumerate(depth_list):
             self.stats["total_depth_list"].append(tuple([info[0], info[1]]))
-            print(str(round(info[0])) + ": " + str(round(info[1])) + (", " if index < len(depth_list) -1 else ""), end="")
+            print(str(round(info[0])) + ": " + str(round(info[1])) +
+                  (", " if index < len(depth_list) - 1 else ""), end="")
 
         print("}")
         print(
             F'iv  Average evaluation depth: {round(np.average(np.array(self.stats["depth_list"])[:,0]),2)}')
         print(
-            F'v   Average recursion depth evaluations: {round(self.stats["ard_list"][self.move - 1],2)}')
+            F'v   Average recursion depth evaluations: {round(self.stats["ard_list"][self.ai_move-1],2)}')
 
     def group_by_sum(self, list):
         u, idx = np.unique(list[:, 0], return_inverse=True)
         s = np.bincount(idx, weights=list[:, 1])
         return np.c_[u, s]
+
+    def no_time_left(self):
+        self.stop_timer_event.set()
 
     def display_inputs(self):
         print('Step 1) Select the size of the board.')
@@ -328,13 +345,12 @@ class Game:
     def minimax(self, depth=0, max=False):
         # Minimizing for 'X' and maximizing for 'O'
         # Possible values are:
-        # -1 - win for 'X'
+        # -maxInt - win for 'X'
         # 0  - a tie
-        # 1  - loss for 'X'
-        # We're initially setting it to 2 or -2 as worse than the worst case:
-        if time.time() >= self.time_start + self.t:
-            sys.exit("The AI took too longer than " + str(self.t) +
-                     " seconds so it automatically loses")
+        # maxInt  - loss for 'X'
+
+        if self.stop_timer_event.is_set():
+            raise Exception(depth)
 
         value = sys.maxsize
         if max:
@@ -394,13 +410,12 @@ class Game:
     def alphabeta(self, depth=0, alpha=-sys.maxsize-1, beta=sys.maxsize, max=False):
         # Minimizing for 'X' and maximizing for 'O'
         # Possible values are:
-        # -infinite - win for 'X'
+        # -maxInt - win for 'X'
         # 0  - a tie
-        # infinite  - loss for 'X'
+        # maxInt  - loss for 'X'
 
-        if time.time() >= self.time_start + self.t:
-            sys.exit("The AI took longer than " + str(self.t) +
-                     " seconds so it automatically loses")
+        if self.stop_timer_event.is_set():
+            raise Exception(depth)
 
         value = sys.maxsize
         if max:
@@ -579,29 +594,44 @@ class Game:
         if player_o == None:
             player_o = "HUMAN"
         while True:
-            self.stats["depth_list"] = []
-            start = time.time()
-            self.time_start = time.time()
-            if algo == self.MINIMAX:
-                if self.player_turn == 'X':
-                    (_, x, y, ard) = self.minimax(max=False)
-                else:
-                    (_, x, y, ard) = self.minimax(max=True)
-            else:  # algo == self.ALPHABETA
-                if self.player_turn == 'X':
-                    (m, x, y, ard) = self.alphabeta(max=False)
-                else:
-                    (m, x, y, ard) = self.alphabeta(max=True)
-            self.stats["ard_list"].append(ard)
-            end = time.time()
-            self.stats["eval_time_list"].append(round(end - start, 2))
-            if (self.player_turn == 'X' and player_x == "HUMAN") or (self.player_turn == 'O' and player_o == "HUMAN"):
-                if self.recommend:
-                    print(F'Evaluation time: {round(end - start, 7)}s')
-                    print(F'Recommended move: x = {x}, y = {y}')
-                (x, y) = self.input_move()
             self.move += 1
-            self.draw_turn_stats(x, y)
+            if (self.player_turn == 'X' and player_x == "HUMAN") or (self.player_turn == 'O' and player_o == "HUMAN"):
+                (x, y) = self.input_move()
+            else:
+                self.ai_move += 1
+                # make deep copy of board
+                self.save_board = copy.deepcopy(self.current_state)
+                self.timer = Timer(self.t - 0.01, self.no_time_left)
+                self.timer.start()
+                self.stats["depth_list"] = []
+                start = time.time()
+                try:
+                    if algo == self.MINIMAX:
+                        if self.player_turn == 'X':
+                            (_, x, y, ard) = self.minimax(max=False)
+                        else:
+                            (_, x, y, ard) = self.minimax(max=True)
+                    else:  # algo == self.ALPHABETA
+                        if self.player_turn == 'X':
+                            (m, x, y, ard) = self.alphabeta(max=False)
+                        else:
+                            (m, x, y, ard) = self.alphabeta(max=True)
+                    end = time.time()
+                except Exception as e:
+                    (x, y, _) = self.find_random_valid_position()
+                    end = time.time()
+                    print(F"*** Out of extra time at depth {str(e)} ***")
+                    ard = 0
+                    # make deep copy of board
+                    self.current_state = copy.deepcopy(self.save_board)
+
+                self.stats["ard_list"].append(ard)
+
+                self.stats["eval_time_list"].append(round(end - start, 7))
+                self.draw_turn_stats(x, y)
+                self.timer.cancel()
+                self.stop_timer_event.clear()
+
             self.current_state[x][y] = self.player_turn
             self.draw_board()
             if self.check_end():
@@ -613,8 +643,10 @@ class Game:
 
 
 def main():
-    g = Game(recommend=True, user_input=True, gameTrace=True, n=5, b=3, s=4, t=30, d1=3, d2=4, a='True', blocs=None, strat1='e2')
+    g = Game(user_input=True, gameTrace=False, n=5, b=3,
+             s=4, t=30, d1=3, d2=4, a='True', blocs=None, strat1='e2')
     g.play(algo=g.algo, player_x=g.player_1, player_o=g.player_2)
+
 
 if __name__ == "__main__":
     main()
