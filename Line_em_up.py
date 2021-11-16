@@ -54,10 +54,13 @@ class Game:
         # Display Initial Game info
         print(F'\nn={self.n} b={self.b} s={self.s} t={self.t}')
         print(F'blocs={self.b_array}')
+        player1_heuristic_string = 'e1(regular)' if strat1 == 'e1' else 'e2(adjacent)'
+        player2_heuristic_string = 'e2(adjacent)' if strat1 == 'e1' else 'e1(regular)'
+
         print(
-            F'\nPlayer 1: {self.player_1} d={self.player_1_strat[0]} a={self.a} e1(regular)')
+            F'\nPlayer 1: {self.player_1} d={self.player_1_strat[0]} a={self.a} {player1_heuristic_string}')
         print(
-            F'Player 2: {self.player_2} d={self.player_2_strat[0]} a={self.a} e2(adjacent)')
+            F'Player 2: {self.player_2} d={self.player_2_strat[0]} a={self.a} {player2_heuristic_string}')
 
         # Display Board
         self.draw_board()
@@ -90,7 +93,7 @@ class Game:
 
         if blocs != None:
             for bloc in blocs:
-                self.current_state[bloc[0]][bloc[1]]
+                self.b_array.append(tuple([bloc[0], bloc[1]]))
         else:
             valid_positions = self.find_all_valid_positions()
             for _ in range(self.b):
@@ -506,20 +509,6 @@ class Game:
                 self.current_state[i][j] == other_player for i in board_range)
             score += opponent_score - player_score
 
-        # Computing first diagonal score
-        player_score = sum(
-            self.current_state[i][i] == player for i in board_range)
-        opponent_score = sum(
-            self.current_state[i][i] == other_player for i in board_range)
-        score += opponent_score - player_score
-
-        # Computing second diagonal score
-        player_score = sum(
-            self.current_state[i][self.n - 1 - i] == player for i in board_range)
-        opponent_score = sum(
-            self.current_state[i][self.n - 1 - i] == other_player for i in board_range)
-        score += opponent_score - player_score
-
         return score
 
     def appraise_count(self, count):
@@ -601,7 +590,7 @@ class Game:
                 self.ai_move += 1
                 # make deep copy of board
                 self.save_board = copy.deepcopy(self.current_state)
-                self.timer = Timer(self.t - 0.01, self.no_time_left)
+                self.timer = Timer(self.t - 0.03, self.no_time_left)
                 self.timer.start()
                 self.stats["depth_list"] = []
                 start = time.time()
@@ -643,8 +632,7 @@ class Game:
 
 
 def main():
-    g = Game(user_input=True, gameTrace=False, n=5, b=3,
-             s=4, t=30, d1=3, d2=4, a='True', blocs=None, strat1='e2')
+    g = Game(user_input=False, gameTrace=True, n=4, b=4, s=3, t=5, d1=6, d2=6, a='False', strat1='e1', blocs=[(0,0),(0,3),(3,0),(3,3)])
     g.play(algo=g.algo, player_x=g.player_1, player_o=g.player_2)
 
 

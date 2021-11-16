@@ -6,8 +6,6 @@ def group_by_sum(list):
     s = np.bincount(idx, weights=list[:, 1])
     return np.c_[u, s]
 
-f = open("scoreboard.txt", "a")
-
 e1_wins=0
 e2_wins=0
 
@@ -16,13 +14,16 @@ nb_iterations=5
 
 # Set game parameters here
 blocs=[(0,0),(0,3),(3,0),(3,3)]
-n=3
-b=3
-s=3
-t=50
-d1=3
-d2=3
+n=8
+b=6
+s=5
+t=1
+d1=6
+d2=6
+
 a='True'
+
+f = open(F'scoreboard{n}{b}{s}{t}.txt', "a")
 
 f.write('-----------------------------------------------\n\n')
 
@@ -39,7 +40,7 @@ average_evaluation_depth_list = []
 moves_list = []
 
 for i in range(nb_iterations):
-    g1 = Game(recommend=False, user_input=False, gameTrace=False, n=n, b=b, s=s, t=t, d1=d1, d2=d2, a=a, strat1='e1')
+    g1 = Game(user_input=False, gameTrace=True, n=n, b=b, s=s, t=t, d1=d1, d2=d2, a=a, strat1='e1')
     g1.play(algo=g1.algo, player_x=g1.player_1, player_o=g1.player_2)
     eval_times.append(g1.stats["average_eval_time"])
     total_heuristic_evaluations += g1.stats["total_heuristic_count"]
@@ -48,7 +49,7 @@ for i in range(nb_iterations):
     average_evaluation_depth_list.append(g1.stats["average_evaluation_depth"])
     moves_list.append(g1.move)
 
-    g2 = Game(recommend=False, user_input=False, gameTrace=False, n=n, b=b, s=s, t=t, d1=d1, d2=d2, a=a, strat1='e2')
+    g2 = Game(user_input=False, gameTrace=True, n=n, b=b, s=s, t=t, d1=d1, d2=d2, a=a, strat1='e2')
     g2.play(algo=g2.algo, player_x=g2.player_1, player_o=g2.player_2)
     eval_times.append(g2.stats["average_eval_time"])
     total_heuristic_evaluations += g2.stats["total_heuristic_count"]
