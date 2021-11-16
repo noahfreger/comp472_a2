@@ -1,5 +1,5 @@
 cffi==1.14.6
 greenlet==0.4.13
 hpy==0.0.3
-numpy @ file:///C:/Users/Ashwin/Desktop/Everything/comp472_a2/numpy-1.21.4vanilla-pp37-pypy37_pp73-win_amd64.whl
+numpy==1.21.4
 readline==6.2.4.1
