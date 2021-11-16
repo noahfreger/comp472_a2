@@ -1,5 +1,3 @@
-# based on code from https://stackabuse.com/minimax-and-alpha-beta-pruning-in-python
-
 import sys
 import numpy as np
 import time
@@ -11,9 +9,9 @@ class Game:
     HUMAN = 2
     AI = 3
 
-    def __init__(self, recommend=False, user_input=True, fileOutput=False, n=0, b=0, s=0, t=0, d1=0, d2=0, a='True', blocs=None, strat1='e1'):
+    def __init__(self, recommend=False, user_input=True, gameTrace=False, n=0, b=0, s=0, t=0, d1=0, d2=0, a='True', blocs=None, strat1='e1'):
         self.recommend = recommend
-        self.fileOutput = fileOutput
+        self.gameTrace = gameTrace
         self.user_input = user_input
         self.initialize_game(n, b, s, t, d1, d2, a, blocs, strat1)
 
@@ -28,7 +26,9 @@ class Game:
             "ard_list": [],
             "depth_list": [],
             "total_depth_list": [],
-            "eval_time_list": []
+            "eval_time_list": [],
+            "average_eval_time": 0,
+            "average_recursion_depth": 0
         }
         if self.user_input:
             self.display_inputs()
@@ -42,7 +42,7 @@ class Game:
 
         self.current_player = self.player_1
 
-        if self.fileOutput:
+        if self.gameTrace:
             sys.stdout = open(F"gameTrace-{self.n}{self.b}{self.s}{self.t}.txt", "w")
 
         # Display Initial Game info
@@ -70,8 +70,8 @@ class Game:
             self.player_1_strat = tuple([d1, self.e1])
             self.player_2_strat = tuple([d2, self.e2])
         else:
-            self.player_1_strat = tuple([d1, self.e2])
-            self.player_2_strat = tuple([d2, self.e1])
+            self.player_1_strat = tuple([d2, self.e2])
+            self.player_2_strat = tuple([d1, self.e1])
 
         self.current_state = []
         for i in range(self.n):
@@ -84,7 +84,7 @@ class Game:
         
         if blocs != None:
             for bloc in blocs:
-                self.current_state[bloc[0], bloc[1]]
+                self.current_state[bloc[0]][bloc[1]]
         else:
             valid_positions = self.find_all_valid_positions()
             for _ in range(self.b):
@@ -119,23 +119,24 @@ class Game:
         return (random_position[0], random_position[1], random_int)
 
     def draw_end_game_stats(self):
+        self.stats["average_eval_time"] = round(np.average(np.array(self.stats["eval_time_list"])),2)
         print(
-            F'\n6(b)i   Average evaluation time: {round(np.average(np.array(self.stats["eval_time_list"])),2)}s')
+            F'\n6(b)i   Average evaluation time: {self.stats["average_eval_time"]}s')
         print(
             F'6(b)ii  Total heuristic evaluations: {self.stats["total_heuristic_count"]}')
         print("6(b)iii Total evaluations by depth: {", end='')
-        total_depth_list = self.group_by_sum(
-            np.array(self.stats["total_depth_list"]))
-        for info in total_depth_list:
-            print(str(round(info[0])) +
-                  ": " + str(round(info[1]))+", ", end="")
+        total_depth_list = self.group_by_sum(np.array(self.stats["total_depth_list"]))
+        for index,info in enumerate(total_depth_list):
+            print(str(round(info[0])) + ": " + str(round(info[1])) + (", " if index < len(total_depth_list) -1 else ""), end="")
         print("}")
 
+        self.stats["average_evaluation_depth"] = round(np.average(total_depth_list[:,0], weights=total_depth_list[:,1]),2)
         print(
-            F'6(b)iv  Average evaluation depth: {round(np.average(total_depth_list[:,0], weights=total_depth_list[:,1]),2)}')
+            F'6(b)iv  Average evaluation depth: {self.stats["average_evaluation_depth"]}')
 
+        self.stats["average_recursion_depth"] = round(np.average(np.array(self.stats["ard_list"])),2)
         print(
-            F'6(b)v   Average recursion depth evaluations: {round(np.average(np.array(self.stats["ard_list"])),2)}')
+            F'6(b)v   Average recursion depth evaluations: {self.stats["average_recursion_depth"]}')
         print(
             F'6(b)vi  Total moves: {self.move}')
 
@@ -152,10 +153,10 @@ class Game:
         print("iii Evaluations by depth: {", end='')
         depth_list = self.group_by_sum(np.array(self.stats["depth_list"]))
 
-        for info in depth_list:
+        for index,info in enumerate(depth_list):
             self.stats["total_depth_list"].append(tuple([info[0], info[1]]))
-            print(str(round(info[0])) +
-                  ": " + str(round(info[1]))+", ", end="")
+            print(str(round(info[0])) + ": " + str(round(info[1])) + (", " if index < len(depth_list) -1 else ""), end="")
+
         print("}")
         print(
             F'iv  Average evaluation depth: {round(np.average(np.array(self.stats["depth_list"])[:,0]),2)}')
@@ -293,10 +294,13 @@ class Game:
         # Printing the appropriate message if the game has ended
         if self.result != None:
             if self.result == 'X':
+                self.winner = 'X'
                 print('The winner is X!')
             elif self.result == 'O':
+                self.winner = 'O'
                 print('The winner is O!')
             elif self.result == '.':
+                self.winner = '.'
                 print("It's a tie!")
         return self.result
 
@@ -602,14 +606,14 @@ class Game:
             self.draw_board()
             if self.check_end():
                 self.draw_end_game_stats()
-                if self.fileOutput:
+                if self.gameTrace:
                     sys.stdout.close()
                 return
             self.switch_player()
 
 
 def main():
-    g = Game(recommend=True, user_input=True, fileOutput=True, n=5, b=3, s=4, t=30, d1=3, d2=4, a='True', blocs=None, strat1='e2')
+    g = Game(recommend=True, user_input=True, gameTrace=True, n=5, b=3, s=4, t=30, d1=3, d2=4, a='True', blocs=None, strat1='e2')
     g.play(algo=g.algo, player_x=g.player_1, player_o=g.player_2)
 
 if __name__ == "__main__":
