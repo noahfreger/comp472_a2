@@ -49,7 +49,7 @@ for i in range(nb_iterations):
     average_evaluation_depth_list.append(g1.stats["average_evaluation_depth"])
     moves_list.append(g1.move)
 
-    g2 = Game(user_input=False, gameTrace=True, n=n, b=b, s=s, t=t, d1=d1, d2=d2, a=a, strat1='e2')
+    g2 = Game(user_input=False, gameTrace=False, n=n, b=b, s=s, t=t, d1=d1, d2=d2, a=a, strat1='e2')
     g2.play(algo=g2.algo, player_x=g2.player_1, player_o=g2.player_2)
     eval_times.append(g2.stats["average_eval_time"])
     total_heuristic_evaluations += g2.stats["total_heuristic_count"]
